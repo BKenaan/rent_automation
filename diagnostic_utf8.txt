@@ -1,0 +1,18 @@
+﻿Postgres host 'db' unreachable. Falling back to local sqlite 'test.db'
+--- Diagnostic Status Checks (2026-02-16) ---
+Total Tenants: 1
+  - Bassel Kenaan: ID=1, Phone=+96181195555
+
+--- Eligible Payments for Reminders ---
+Total Pending/Overdue Schedules: 14
+Due in 7 days: 2
+Due today: 1
+Overdue: 0
+  - ID 1: Due 2026-02-23, Amount 1000.00, Tenant ID 1
+  - ID 3: Due 2026-02-23, Amount 1000.00, Tenant ID 1
+  - ID 2: Due 2026-02-16, Amount 1000.00, Tenant ID 1
+
+--- Recent Notification Logs ---
+Total Logs: 2
+  - Log ID 1: Sent to Tenant 1 on 2026-02-16 16:51:06.603289 (Type: NotificationType.RENT_UPCOMING)
+  - Log ID 2: Sent to Tenant 1 on 2026-02-16 16:51:06.604919 (Type: NotificationType.RENT_DUE)
