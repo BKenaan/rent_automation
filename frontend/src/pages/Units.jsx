@@ -19,13 +19,16 @@ const Units = () => {
     });
     const [submitting, setSubmitting] = useState(false);
 
+    const asArray = (x) => (Array.isArray(x) ? x : []);
+
     const fetchUnits = async () => {
         setLoading(true);
         try {
             const res = await unitsApi.getAll();
-            setUnits(res.data);
+            setUnits(asArray(res?.data));
         } catch (err) {
             console.error("Error fetching units:", err);
+            setUnits([]);
         } finally {
             setLoading(false);
         }

@@ -13,7 +13,7 @@ const Register = () => {
     });
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
-    const { register, login } = useAuth();
+    const { register, login, logout } = useAuth();
     const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
@@ -27,6 +27,8 @@ const Register = () => {
 
         setLoading(true);
         try {
+            // Clear any existing session so the new account gets a clean login (no old token used)
+            logout();
             await register({
                 username: formData.username,
                 email: formData.email,

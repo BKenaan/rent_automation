@@ -25,13 +25,16 @@ const Tenants = () => {
     const [statementData, setStatementData] = useState(null);
     const [statementLoading, setStatementLoading] = useState(false);
 
+    const asArray = (x) => (Array.isArray(x) ? x : []);
+
     const fetchTenants = async () => {
         setLoading(true);
         try {
             const res = await tenantsApi.getAll();
-            setTenants(res.data);
+            setTenants(asArray(res?.data));
         } catch (err) {
             console.error("Error fetching tenants:", err);
+            setTenants([]);
         } finally {
             setLoading(false);
         }
@@ -41,9 +44,10 @@ const Tenants = () => {
         setUnitsLoading(true);
         try {
             const res = await unitsApi.getAll();
-            setUnits(res.data);
+            setUnits(asArray(res?.data));
         } catch (err) {
             console.error("Error fetching units:", err);
+            setUnits([]);
         } finally {
             setUnitsLoading(false);
         }
@@ -59,7 +63,8 @@ const Tenants = () => {
         setIsStatementOpen(true);
         try {
             const res = await statementsApi.getStatement(tenantId);
-            setStatementData(res.data);
+            const data = res?.data;
+            setStatementData(data ? { ...data, transactions: asArray(data.transactions) } : null);
         } catch (err) {
             console.error("Error fetching statement:", err);
             alert("Failed to load account statement.");
@@ -292,7 +297,7 @@ const Tenants = () => {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {statementData.transactions.map((t, idx) => (
+                                    {(Array.isArray(statementData.transactions) ? statementData.transactions : []).map((t, idx) => (
                                         <tr key={idx} style={{ borderBottom: '1px solid var(--panel-border)' }}>
                                             <td style={{ padding: '0.75rem' }}>{formatDate(t.date)}</td>
                                             <td style={{ padding: '0.75rem' }}>{t.description}</td>

@@ -20,13 +20,16 @@ const Payments = () => {
     });
     const [submitting, setSubmitting] = useState(false);
 
+    const asArray = (x) => (Array.isArray(x) ? x : []);
+
     const fetchPayments = async () => {
         setLoading(true);
         try {
             const res = await paymentsApi.getAll();
-            setPayments(res.data);
+            setPayments(asArray(res?.data));
         } catch (err) {
             console.error("Error fetching payments:", err);
+            setPayments([]);
         } finally {
             setLoading(false);
         }

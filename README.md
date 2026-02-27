@@ -55,6 +55,23 @@ If you want to run the frontend and backend separately for development (with hot
 
 ---
 
+## ⚙️ Environment variables
+
+Create a `.env` file from the example (do not commit `.env`):
+
+```bash
+cp .env.example .env
+```
+
+Then edit `.env` and set:
+
+- **Database:** `POSTGRES_*` (used by Docker and the API).
+- **Password reset (production):**
+  - **`FRONTEND_URL`** – Your frontend base URL (e.g. `https://app.yourdomain.com`) so the reset link in emails points to the correct site.
+  - **SMTP:** `SMTP_HOST`, `SMTP_USER`, `SMTP_PASSWORD` (and optionally `EMAILS_FROM_EMAIL`, `EMAILS_FROM_NAME`) so reset links are sent by email. If SMTP is not set, reset links are only printed in the server log (suitable for development only).
+
+---
+
 ## 🔍 Troubleshooting
 
 ### `uvicorn` is not recognized

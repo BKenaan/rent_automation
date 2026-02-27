@@ -55,6 +55,8 @@ class Settings(BaseSettings):
     SECRET_KEY: str = "7290eb64817a7e8706a1478144883461" # Generatated for dev
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7 # 7 days
+    PASSWORD_RESET_EXPIRE_MINUTES: int = 60  # 1 hour for reset link
+    FRONTEND_URL: str = "http://localhost:5173"  # Base URL for password reset link in email
     
     # Notifications
     ZAPIER_WEBHOOK_URL: str | None = None

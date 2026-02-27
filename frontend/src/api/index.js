@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-    baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000',
+    baseURL: import.meta.env.VITE_API_URL || '/api',
     headers: {
         'Content-Type': 'application/json',
     },
@@ -21,39 +21,41 @@ export const authApi = {
         headers: { 'Content-Type': 'multipart/form-data' }
     }),
     register: (data) => api.post('/auth/register', data),
+    forgotPassword: (email) => api.post('/auth/forgot-password', { email }),
+    resetPassword: (token, new_password) => api.post('/auth/reset-password', { token, new_password }),
 };
 
 export const tenantsApi = {
-    getAll: () => api.get('/tenants'),
+    getAll: () => api.get('/tenants/'),
     getById: (id) => api.get(`/tenants/${id}`),
-    create: (data) => api.post('/tenants', data),
+    create: (data) => api.post('/tenants/', data),
     update: (id, data) => api.put(`/tenants/${id}`, data),
     delete: (id) => api.delete(`/tenants/${id}`),
 };
 
 export const unitsApi = {
-    getAll: () => api.get('/units'),
+    getAll: () => api.get('/units/'),
     getById: (id) => api.get(`/units/${id}`),
-    create: (data) => api.post('/units', data),
+    create: (data) => api.post('/units/', data),
     update: (id, data) => api.put(`/units/${id}`, data),
     delete: (id) => api.delete(`/units/${id}`),
 };
 
 export const leasesApi = {
-    getAll: () => api.get('/leases'),
-    create: (data) => api.post('/leases', data),
+    getAll: () => api.get('/leases/'),
+    create: (data) => api.post('/leases/', data),
     update: (id, data) => api.put(`/leases/${id}`, data),
     delete: (id) => api.delete(`/leases/${id}`),
 };
 
 export const paymentsApi = {
-    getAll: () => api.get('/payments'),
+    getAll: () => api.get('/payments/'),
     record: (scheduleId, data) => api.post(`/payments/${scheduleId}/record`, data),
 };
 
 export const expensesApi = {
-    getAll: (unitId) => api.get('/expenses', { params: { unit_id: unitId } }),
-    create: (data) => api.post('/expenses', data),
+    getAll: (unitId) => api.get('/expenses/', { params: { unit_id: unitId } }),
+    create: (data) => api.post('/expenses/', data),
     update: (id, data) => api.put(`/expenses/${id}`, data),
     delete: (id) => api.delete(`/expenses/${id}`),
 };

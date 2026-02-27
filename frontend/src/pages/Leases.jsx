@@ -25,13 +25,16 @@ const Leases = () => {
 
     const [editingLease, setEditingLease] = useState(null);
 
+    const asArray = (x) => (Array.isArray(x) ? x : []);
+
     const fetchLeases = async () => {
         setLoading(true);
         try {
             const res = await leasesApi.getAll();
-            setLeases(res.data);
+            setLeases(asArray(res?.data));
         } catch (err) {
             console.error('Error fetching leases:', err);
+            setLeases([]);
         } finally {
             setLoading(false);
         }
@@ -44,10 +47,12 @@ const Leases = () => {
                 tenantsApi.getAll(),
                 unitsApi.getAll(),
             ]);
-            setTenants(tenantsRes.data);
-            setUnits(unitsRes.data);
+            setTenants(asArray(tenantsRes?.data));
+            setUnits(asArray(unitsRes?.data));
         } catch (err) {
             console.error('Error fetching tenants/units:', err);
+            setTenants([]);
+            setUnits([]);
         } finally {
             setOptionsLoading(false);
         }

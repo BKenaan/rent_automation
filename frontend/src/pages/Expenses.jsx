@@ -32,6 +32,8 @@ const Expenses = () => {
         'Other'
     ];
 
+    const asArray = (x) => (Array.isArray(x) ? x : []);
+
     const fetchData = async () => {
         setLoading(true);
         try {
@@ -39,10 +41,12 @@ const Expenses = () => {
                 expensesApi.getAll(filterUnitId || undefined),
                 unitsApi.getAll()
             ]);
-            setExpenses(expensesRes.data);
-            setUnits(unitsRes.data);
+            setExpenses(asArray(expensesRes?.data));
+            setUnits(asArray(unitsRes?.data));
         } catch (err) {
             console.error("Error fetching expense data:", err);
+            setExpenses([]);
+            setUnits([]);
         } finally {
             setLoading(false);
         }

@@ -27,7 +27,10 @@ export const AuthProvider = ({ children }) => {
         formData.append('password', password);
 
         const res = await authApi.login(formData);
-        setToken(res.data.access_token);
+        const newToken = res.data.access_token;
+        // Set token in localStorage immediately so the next page / API calls use it (no race with navigate)
+        localStorage.setItem('token', newToken);
+        setToken(newToken);
         return res.data;
     };
 

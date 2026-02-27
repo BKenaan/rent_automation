@@ -69,11 +69,13 @@ const Dashboard = () => {
                     expensesApi.getAll(),
                 ]);
 
-                const tenants = tenantsRes.data;
-                const units = unitsRes.data;
-                const payments = paymentsRes.data;
-                const leases = leasesRes.data;
-                const expenses = expensesRes.data;
+                // Ensure we always have arrays (API may return non-array on error or unexpected shape)
+                const asArray = (x) => (Array.isArray(x) ? x : []);
+                const tenants = asArray(tenantsRes?.data);
+                const units = asArray(unitsRes?.data);
+                const payments = asArray(paymentsRes?.data);
+                const leases = asArray(leasesRes?.data);
+                const expenses = asArray(expensesRes?.data);
 
                 const grossRevenue = payments
                     .filter(p => p.status === 'paid')
