@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from sqlalchemy import String, Text, DateTime, Integer
+from sqlalchemy import String, Text, DateTime, Integer, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from typing import List, Optional
 from app.db.session import Base
@@ -9,6 +9,7 @@ class Tenant(Base):
     __tablename__ = "tenants"
 
     id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False)
     full_name: Mapped[str] = mapped_column(String(255), index=True)
     phone: Mapped[str] = mapped_column(String(50), index=True)
     email: Mapped[str] = mapped_column(String(255), index=True)

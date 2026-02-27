@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from sqlalchemy import String, Text, DateTime, Numeric, Enum as SQLEnum
+from sqlalchemy import String, Text, DateTime, Numeric, Enum as SQLEnum, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from typing import List, Optional
 from app.db.session import Base
@@ -9,6 +9,7 @@ class Unit(Base):
     __tablename__ = "units"
 
     id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False)
     name: Mapped[str] = mapped_column(String(255), index=True)
     address: Mapped[str] = mapped_column(String(511))
     unit_code: Mapped[str] = mapped_column(String(50), unique=True, index=True)

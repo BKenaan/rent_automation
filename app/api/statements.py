@@ -15,24 +15,12 @@ from app.models.user import User as UserModel
 
 router = APIRouter(prefix="/statements", tags=["statements"])
 
-@router.get("/{tenant_id}", response_model=TenantStatement)
-def get_tenant_statement(
-    tenant_id: int, 
-    db: Session = Depends(get_db),
-    current_user: UserModel = Depends(get_current_user)
-):
-    tenant = db.query(TenantModel).filter(TenantModel.id == tenant_id).first()
-    if not tenant:
-        raise HTTPException(status_code=404, detail="Tenant not found")
-    
-    # Ideally a tenant has one active lease, but we'll sum across all
-    leases = db.query(LeaseModel).filter(LeaseModel.tenant_id == tenant_id).all()
-    
+def _build_statement(tenant: TenantModel, db: Session) -> TenantStatement:
+    leases = db.query(LeaseModel).filter(LeaseModel.tenant_id == tenant.id).all()
     total_due = 0.0
     total_paid = 0.0
     transactions = []
     unit_names = []
-    
     for lease in leases:
         unit_names.append(lease.unit.name)
         schedules = db.query(PaymentScheduleModel).filter(PaymentScheduleModel.lease_id == lease.id).order_by(PaymentScheduleModel.due_date.asc()).all()
@@ -40,16 +28,13 @@ def get_tenant_statement(
             total_due += float(s.amount)
             if s.status == "paid":
                 total_paid += float(s.amount)
-            
             transactions.append(StatementTransaction(
                 date=s.due_date,
                 description=f"Rent - {lease.unit.name}",
                 amount=float(s.amount),
                 status=s.status.value
             ))
-            
     balance = total_due - total_paid
-    
     return TenantStatement(
         tenant_name=tenant.full_name,
         unit_name=", ".join(list(set(unit_names))) or "N/A",
@@ -59,9 +44,29 @@ def get_tenant_statement(
         transactions=transactions
     )
 
+
+@router.get("/{tenant_id}", response_model=TenantStatement)
+def get_tenant_statement(
+    tenant_id: int,
+    db: Session = Depends(get_db),
+    current_user: UserModel = Depends(get_current_user)
+):
+    tenant = db.query(TenantModel).filter(TenantModel.id == tenant_id, TenantModel.user_id == current_user.id).first()
+    if not tenant:
+        raise HTTPException(status_code=404, detail="Tenant not found")
+    return _build_statement(tenant, db)
+
+
 @router.get("/{tenant_id}/download")
-def download_tenant_statement(tenant_id: int, db: Session = Depends(get_db)):
-    statement = get_tenant_statement(tenant_id, db)
+def download_tenant_statement(
+    tenant_id: int,
+    db: Session = Depends(get_db),
+    current_user: UserModel = Depends(get_current_user)
+):
+    tenant = db.query(TenantModel).filter(TenantModel.id == tenant_id, TenantModel.user_id == current_user.id).first()
+    if not tenant:
+        raise HTTPException(status_code=404, detail="Tenant not found")
+    statement = _build_statement(tenant, db)
     
     pdf_buffer = generate_statement_pdf(
         tenant_name=statement.tenant_name,
