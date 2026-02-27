@@ -22,3 +22,21 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
 def get_password_hash(password: str) -> str:
     return pwd_context.hash(password)
+
+def create_password_reset_token(email: str) -> str:
+    """Create a JWT for password reset (sub=email, type=password_reset)."""
+    expire = datetime.now(timezone.utc) + timedelta(
+        minutes=getattr(settings, "PASSWORD_RESET_EXPIRE_MINUTES", 60)
+    )
+    to_encode = {"exp": expire, "sub": email, "type": "password_reset"}
+    return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+
+def decode_password_reset_token(token: str) -> str | None:
+    """Decode reset token; return email if valid, else None."""
+    try:
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        if payload.get("type") != "password_reset":
+            return None
+        return payload.get("sub")
+    except Exception:
+        return None

@@ -4,10 +4,12 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from app.db.session import get_db
 from app.models.user import User as UserModel
-from app.schemas.user import User, UserCreate
+from app.models.enums import NotificationChannel
+from app.schemas.user import User, UserCreate, ForgotPasswordRequest, ResetPasswordRequest
 from app.schemas.token import Token
 from app.core import security
 from app.core.config import settings
+from app.services.notification import notification_service
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -60,3 +62,57 @@ def login(db: Session = Depends(get_db), form_data: OAuth2PasswordRequestForm = 
         ),
         "token_type": "bearer",
     }
+
+
+@router.post("/forgot-password")
+async def forgot_password(body: ForgotPasswordRequest, db: Session = Depends(get_db)):
+    """
+    Request a password reset. If the email exists, a reset link is sent (when SMTP is configured).
+    Always returns the same message to avoid revealing whether the email is registered.
+    """
+    user = db.query(UserModel).filter(UserModel.email == body.email).first()
+    if not user:
+        return {"message": "If that email is registered, you will receive a password reset link."}
+
+    reset_token = security.create_password_reset_token(user.email)
+    base_url = getattr(settings, "FRONTEND_URL", "http://localhost:5173").rstrip("/")
+    reset_link = f"{base_url}/reset-password?token={reset_token}"
+
+    if all([getattr(settings, "SMTP_HOST", None), getattr(settings, "SMTP_USER", None)]):
+        message = (
+            f"Hi {user.full_name or user.username},\n\n"
+            f"Use this link to reset your password (valid for 1 hour):\n{reset_link}\n\n"
+            "If you didn't request this, you can ignore this email."
+        )
+        await notification_service.notify(
+            NotificationChannel.EMAIL,
+            to=user.email,
+            message=message,
+            payload={"subject": "Reset your password"},
+        )
+    else:
+        # Dev: log link so you can test without email
+        print(f"DEBUG Password reset link for {user.email}: {reset_link}")
+
+    return {"message": "If that email is registered, you will receive a password reset link."}
+
+
+@router.post("/reset-password")
+def reset_password(body: ResetPasswordRequest, db: Session = Depends(get_db)):
+    """
+    Set a new password using the token from the forgot-password email link.
+    """
+    email = security.decode_password_reset_token(body.token)
+    if not email:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or expired reset link. Please request a new one.",
+        )
+    user = db.query(UserModel).filter(UserModel.email == email).first()
+    if not user:
+        raise HTTPException(status_code=400, detail="Invalid or expired reset link.")
+
+    user.hashed_password = security.get_password_hash(body.new_password)
+    db.add(user)
+    db.commit()
+    return {"message": "Password has been reset. You can sign in with your new password."}
