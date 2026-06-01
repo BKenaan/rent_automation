@@ -7,22 +7,18 @@ const ResetPassword = () => {
     const [searchParams] = useSearchParams();
     const token = searchParams.get('token') || '';
     const [formData, setFormData] = useState({ password: '', confirmPassword: '' });
-    const [error, setError] = useState('');
-    const [loading, setLoading] = useState(false);
-    const [success, setSuccess] = useState(false);
+    const [error, setError]       = useState('');
+    const [loading, setLoading]   = useState(false);
+    const [success, setSuccess]   = useState(false);
     const navigate = useNavigate();
+
+    const handle = (field) => (e) => setFormData({ ...formData, [field]: e.target.value });
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
-        if (formData.password !== formData.confirmPassword) {
-            setError('Passwords do not match');
-            return;
-        }
-        if (!token) {
-            setError('Invalid reset link. Please request a new one from the forgot password page.');
-            return;
-        }
+        if (formData.password !== formData.confirmPassword) { setError('Passwords do not match'); return; }
+        if (!token) { setError('Invalid reset link. Please request a new one.'); return; }
         setLoading(true);
         try {
             await authApi.resetPassword(token, formData.password);
@@ -35,34 +31,15 @@ const ResetPassword = () => {
         }
     };
 
-    const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
-    };
-
     if (!token && !success) {
         return (
-            <div style={{
-                minHeight: '100vh',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                background: 'var(--bg-color)',
-                padding: '2rem 1rem'
-            }}>
-                <div className="glass" style={{
-                    width: '100%',
-                    maxWidth: '450px',
-                    padding: '2.5rem',
-                    borderRadius: '24px',
-                    textAlign: 'center'
-                }}>
-                    <KeyRound size={48} style={{ color: 'var(--text-secondary)', marginBottom: '1rem' }} />
-                    <h1 style={{ marginBottom: '0.5rem' }}>Invalid reset link</h1>
-                    <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
-                        This link is missing or invalid. Request a new password reset.
-                    </p>
-                    <Link to="/forgot-password" className="btn btn-primary" style={{ display: 'inline-flex' }}>
-                        Forgot password
+            <div className="auth-page">
+                <div className="auth-card" style={{ textAlign: 'center' }}>
+                    <KeyRound size={40} className="text-muted" style={{ margin: '0 auto 12px' }} />
+                    <h1 style={{ marginBottom: 8 }}>Invalid reset link</h1>
+                    <p className="text-2" style={{ marginBottom: 24 }}>This link is missing or invalid.</p>
+                    <Link to="/forgot-password" className="btn btn-primary btn-lg" style={{ display: 'inline-flex' }}>
+                        Request new link
                     </Link>
                 </div>
             </div>
@@ -70,148 +47,55 @@ const ResetPassword = () => {
     }
 
     return (
-        <div style={{
-            minHeight: '100vh',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            background: 'var(--bg-color)',
-            padding: '2rem 1rem'
-        }}>
-            <div className="glass" style={{
-                width: '100%',
-                maxWidth: '450px',
-                padding: '2.5rem',
-                borderRadius: '24px',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '2.5rem'
-            }}>
-                <div style={{ textAlign: 'center' }}>
-                    <div style={{
-                        width: '64px',
-                        height: '64px',
-                        borderRadius: '16px',
-                        background: 'var(--accent-glow)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        margin: '0 auto 1.5rem',
-                        color: 'var(--accent-color)'
-                    }}>
-                        <KeyRound size={32} />
+        <div className="auth-page">
+            <div className="auth-card">
+                <div className="auth-header">
+                    <div className="auth-icon">
+                        <KeyRound size={24} />
                     </div>
-                    <h1 style={{ marginBottom: '0.5rem' }}>Set new password</h1>
-                    <p style={{ color: 'var(--text-secondary)' }}>
-                        Enter your new password below.
-                    </p>
+                    <div>
+                        <h1>Set new password</h1>
+                        <p>Enter your new password below</p>
+                    </div>
                 </div>
 
                 {success ? (
-                    <div style={{
-                        padding: '1rem',
-                        background: 'rgba(16, 185, 129, 0.1)',
-                        border: '1px solid var(--success-color)',
-                        borderRadius: '12px',
-                        color: 'var(--success-color)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.75rem',
-                        fontSize: '0.9rem'
-                    }}>
-                        <CheckCircle size={20} />
-                        <span>Password updated. Redirecting you to sign in...</span>
+                    <div className="alert alert-success">
+                        <CheckCircle size={16} style={{ flexShrink: 0, marginTop: 1 }} />
+                        <span>Password updated. Redirecting to sign in…</span>
                     </div>
                 ) : (
                     <>
                         {error && (
-                            <div style={{
-                                padding: '0.75rem 1rem',
-                                background: 'rgba(239, 68, 68, 0.1)',
-                                border: '1px solid var(--error-color)',
-                                borderRadius: '12px',
-                                color: 'var(--error-color)',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '0.75rem',
-                                fontSize: '0.9rem'
-                            }}>
-                                <AlertCircle size={18} />
-                                {error}
+                            <div className="alert alert-error">
+                                <AlertCircle size={16} style={{ flexShrink: 0, marginTop: 1 }} />
+                                <span>{error}</span>
                             </div>
                         )}
-
-                        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                                <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>New password</label>
-                                <div style={{ position: 'relative' }}>
-                                    <Lock size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)' }} />
-                                    <input
-                                        name="password"
-                                        type="password"
-                                        required
-                                        minLength={6}
-                                        className="glass"
-                                        style={{
-                                            width: '100%',
-                                            padding: '0.75rem 1rem 0.75rem 2.5rem',
-                                            borderRadius: '12px',
-                                            border: '1px solid var(--panel-border)',
-                                            color: 'white',
-                                            background: 'rgba(255, 255, 255, 0.05)'
-                                        }}
-                                        value={formData.password}
-                                        onChange={handleChange}
-                                        placeholder="••••••••"
-                                    />
+                        <form className="form-stack" onSubmit={handleSubmit}>
+                            <div className="form-group">
+                                <label className="form-label">New password</label>
+                                <div className="input-icon-wrap">
+                                    <Lock size={15} className="input-icon" />
+                                    <input type="password" required minLength={8} className="form-input" placeholder="Min 8 chars, 1 uppercase, 1 digit" value={formData.password} onChange={handle('password')} autoComplete="new-password" />
                                 </div>
                             </div>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                                <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Confirm new password</label>
-                                <div style={{ position: 'relative' }}>
-                                    <Lock size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)' }} />
-                                    <input
-                                        name="confirmPassword"
-                                        type="password"
-                                        required
-                                        minLength={6}
-                                        className="glass"
-                                        style={{
-                                            width: '100%',
-                                            padding: '0.75rem 1rem 0.75rem 2.5rem',
-                                            borderRadius: '12px',
-                                            border: '1px solid var(--panel-border)',
-                                            color: 'white',
-                                            background: 'rgba(255, 255, 255, 0.05)'
-                                        }}
-                                        value={formData.confirmPassword}
-                                        onChange={handleChange}
-                                        placeholder="••••••••"
-                                    />
+                            <div className="form-group">
+                                <label className="form-label">Confirm new password</label>
+                                <div className="input-icon-wrap">
+                                    <Lock size={15} className="input-icon" />
+                                    <input type="password" required minLength={8} className="form-input" placeholder="••••••••" value={formData.confirmPassword} onChange={handle('confirmPassword')} autoComplete="new-password" />
                                 </div>
                             </div>
-
-                            <button
-                                type="submit"
-                                className="btn btn-primary"
-                                disabled={loading}
-                                style={{
-                                    marginTop: '0.5rem',
-                                    height: '48px',
-                                    justifyContent: 'center',
-                                    fontSize: '1rem'
-                                }}
-                            >
-                                {loading ? 'Updating...' : 'Update password'}
+                            <button type="submit" className="btn btn-primary btn-lg w-full" disabled={loading}>
+                                {loading ? 'Updating…' : 'Update password'}
                             </button>
                         </form>
                     </>
                 )}
 
-                <p style={{ textAlign: 'center', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
-                    <Link to="/login" style={{ color: 'var(--accent-color)', textDecoration: 'none', fontWeight: 600 }}>
-                        Back to sign in
-                    </Link>
+                <p className="auth-footer">
+                    <Link to="/login">Back to sign in</Link>
                 </p>
             </div>
         </div>

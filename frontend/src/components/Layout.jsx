@@ -1,52 +1,34 @@
-import { useAuth } from '../context/AuthContext';
+import React from 'react';
 import { LogOut } from 'lucide-react';
 import Sidebar from './Sidebar';
+import { useAuth } from '../context/AuthContext';
 
 const Layout = ({ children }) => {
-    const { logout } = useAuth();
+    const { logout, username } = useAuth();
+    const initials = username ? username.slice(0, 2).toUpperCase() : 'U';
 
     return (
-        <div className="app-container">
+        <div className="app-shell">
             <Sidebar />
-            <main className="main-content">
-                <header style={{
-                    display: 'flex',
-                    justifyContent: 'flex-end',
-                    alignItems: 'center',
-                    marginBottom: '2rem',
-                    gap: '1rem'
-                }}>
-                    <div className="glass" style={{
-                        padding: '0.5rem 1rem',
-                        borderRadius: '12px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.75rem'
-                    }}>
-                        <div style={{
-                            width: '32px',
-                            height: '32px',
-                            borderRadius: '50%',
-                            background: 'linear-gradient(45deg, var(--accent-color), #ff4081)'
-                        }}></div>
-                        <span style={{ fontSize: '0.9rem', fontWeight: 500 }}>Admin User</span>
+            <div className="main-area">
+                <header className="topbar">
+                    <div className="topbar-user">
+                        <div className="topbar-avatar">{initials}</div>
+                        <span>{username || 'User'}</span>
                     </div>
                     <button
+                        className="btn btn-ghost btn-icon"
                         onClick={logout}
-                        className="btn glass"
-                        style={{
-                            padding: '0.5rem',
-                            borderRadius: '12px',
-                            color: 'var(--error-color)',
-                            border: '1px solid rgba(239, 68, 68, 0.2)'
-                        }}
-                        title="Logout"
+                        title="Sign out"
+                        style={{ color: 'var(--red)' }}
                     >
-                        <LogOut size={20} />
+                        <LogOut size={17} />
                     </button>
                 </header>
-                {children}
-            </main>
+                <main className="page-body">
+                    {children}
+                </main>
+            </div>
         </div>
     );
 };

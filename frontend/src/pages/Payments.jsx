@@ -1,265 +1,184 @@
 import React, { useState, useEffect } from 'react';
-import { CreditCard, Download, Filter, CheckCircle, Clock, PlusCircle } from 'lucide-react';
+import { CreditCard, Filter, CheckCircle, Clock, AlertCircle, PlusCircle } from 'lucide-react';
 import { paymentsApi } from '../api';
 import Modal from '../components/Modal';
 import { formatDate } from '../utils/dateUtils';
 
+const asArray = (x) => (Array.isArray(x) ? x : []);
+const fmt = (v, cur) => `${Number(v).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${cur || 'USD'}`;
+
+const StatusBadge = ({ status }) => {
+    const map = { paid: ['badge-green', CheckCircle], overdue: ['badge-red', AlertCircle], pending: ['badge-yellow', Clock] };
+    const [cls, Icon] = map[status] || ['badge-neutral', Clock];
+    return <span className={`badge ${cls}`}><Icon size={11} />{status}</span>;
+};
+
 const Payments = () => {
-    const [payments, setPayments] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [filterTenant, setFilterTenant] = useState('');
-
-    // Recording Modal State
-    const [isRecordModalOpen, setIsRecordModalOpen] = useState(false);
-    const [recordingPayment, setRecordingPayment] = useState(null);
-    const [recordData, setRecordData] = useState({
-        payment_method: 'Bank Transfer',
-        reference: '',
-        notes: '',
-        paid_at: new Date().toISOString().split('T')[0]
-    });
+    const [payments, setPayments]     = useState([]);
+    const [loading, setLoading]       = useState(true);
+    const [filterTenant, setFilter]   = useState('');
+    const [isRecordOpen, setRecord]   = useState(false);
+    const [recording, setRecording]   = useState(null);
+    const [recordData, setRecordData] = useState({ payment_method: 'Bank Transfer', reference: '', notes: '', paid_at: new Date().toISOString().split('T')[0] });
     const [submitting, setSubmitting] = useState(false);
-
-    const asArray = (x) => (Array.isArray(x) ? x : []);
 
     const fetchPayments = async () => {
         setLoading(true);
-        try {
-            const res = await paymentsApi.getAll();
-            setPayments(asArray(res?.data));
-        } catch (err) {
-            console.error("Error fetching payments:", err);
-            setPayments([]);
-        } finally {
-            setLoading(false);
-        }
+        try { setPayments(asArray((await paymentsApi.getAll())?.data)); }
+        catch (err) { console.error(err); }
+        finally { setLoading(false); }
     };
 
-    useEffect(() => {
-        fetchPayments();
-    }, []);
+    useEffect(() => { fetchPayments(); }, []);
 
-    const openRecordModal = (payment) => {
-        setRecordingPayment(payment);
-        setRecordData({
-            payment_method: 'Bank Transfer',
-            reference: '',
-            notes: '',
-            paid_at: new Date().toISOString().split('T')[0]
-        });
-        setIsRecordModalOpen(true);
+    const openRecord = (p) => {
+        setRecording(p);
+        setRecordData({ payment_method: 'Bank Transfer', reference: '', notes: '', paid_at: new Date().toISOString().split('T')[0] });
+        setRecord(true);
     };
 
-    const handleRecordSubmit = async (e) => {
+    const handleRecord = async (e) => {
         e.preventDefault();
         setSubmitting(true);
         try {
-            await paymentsApi.record(recordingPayment.id, recordData);
-            setIsRecordModalOpen(false);
+            await paymentsApi.record(recording.id, recordData);
+            setRecord(false);
             fetchPayments();
         } catch (err) {
-            console.error("Error recording payment:", err);
-            alert("Failed to record payment. Please try again.");
-        } finally {
-            setSubmitting(false);
-        }
+            alert(err.response?.data?.detail || 'Failed to record payment.');
+        } finally { setSubmitting(false); }
     };
 
-    const filteredPayments = filterTenant
-        ? payments.filter(p => p.lease?.tenant?.full_name === filterTenant)
-        : payments;
+    const tenantNames = [...new Set(payments.map(p => p.lease?.tenant?.full_name).filter(Boolean))];
+    const filtered    = filterTenant ? payments.filter(p => p.lease?.tenant?.full_name === filterTenant) : payments;
 
-    const tenants = [...new Set(payments.map(p => p.lease?.tenant?.full_name).filter(Boolean))];
+    const field = (k) => (e) => setRecordData({ ...recordData, [k]: e.target.value });
+
+    const summary = { paid: 0, pending: 0, overdue: 0 };
+    payments.forEach(p => { if (summary[p.status] !== undefined) summary[p.status]++; });
 
     return (
         <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+            <div className="page-header">
                 <div>
-                    <h1>Payment Tracking</h1>
-                    <p style={{ color: 'var(--text-secondary)' }}>Monitor and record transactions across all leases.</p>
+                    <h1 className="page-title">Payment Tracking</h1>
+                    <p className="page-subtitle">Monitor and record rent transactions</p>
                 </div>
-                <div style={{ display: 'flex', gap: '1rem' }}>
-                    <button className="btn" style={{ background: 'var(--panel-bg)', color: 'white', border: '1px solid var(--panel-border)' }}>
-                        <Download size={20} />
-                        Export
-                    </button>
-                    <button className="btn btn-primary" onClick={() => alert("Please use 'Record' button next to a pending payment below.")}>
-                        <CreditCard size={20} />
-                        Bulk Record
-                    </button>
+                <div className="flex-center gap-8">
+                    <span className="badge badge-green"><CheckCircle size={11} />{summary.paid} paid</span>
+                    <span className="badge badge-yellow"><Clock size={11} />{summary.pending} pending</span>
+                    <span className="badge badge-red"><AlertCircle size={11} />{summary.overdue} overdue</span>
                 </div>
             </div>
 
-            <div className="glass" style={{ padding: '1.5rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                    <h3>Transaction History</h3>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(255,255,255,0.05)', padding: '0.5rem 1rem', borderRadius: '8px', border: '1px solid var(--panel-border)' }}>
-                            <Filter size={16} color="var(--text-secondary)" />
-                            <select
-                                value={filterTenant}
-                                onChange={(e) => setFilterTenant(e.target.value)}
-                                style={{ background: 'transparent', border: 'none', color: 'white', outline: 'none', cursor: 'pointer' }}
-                            >
-                                <option value="" style={{ color: 'black' }}>All Tenants</option>
-                                {tenants.map(name => (
-                                    <option key={name} value={name} style={{ color: 'black' }}>{name}</option>
-                                ))}
-                            </select>
+            {/* Record payment modal */}
+            <Modal isOpen={isRecordOpen} onClose={() => setRecord(false)} title="Record Payment">
+                {recording && (
+                    <div className="info-block">
+                        <div className="info-row">
+                            <span className="info-row-label">Tenant</span>
+                            <span className="info-row-value">{recording.lease?.tenant?.full_name}</span>
                         </div>
-                    </div>
-                </div>
-
-                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-                    <thead>
-                        <tr style={{ color: 'var(--text-secondary)', borderBottom: '1px solid var(--panel-border)' }}>
-                            <th style={{ padding: '1rem' }}>Tenant</th>
-                            <th style={{ padding: '1rem' }}>Unit</th>
-                            <th style={{ padding: '1rem' }}>Date</th>
-                            <th style={{ padding: '1rem' }}>Amount</th>
-                            <th style={{ padding: '1rem' }}>Status</th>
-                            <th style={{ padding: '1rem', textAlign: 'right' }}>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {loading ? (
-                            <tr><td colSpan="6" style={{ textAlign: 'center', padding: '2rem' }}>Loading payments...</td></tr>
-                        ) : filteredPayments.length === 0 ? (
-                            <tr><td colSpan="6" style={{ textAlign: 'center', padding: '2rem' }}>No payment records found.</td></tr>
-                        ) : filteredPayments.map((payment) => (
-                            <tr key={payment.id} style={{ borderBottom: '1px solid var(--panel-border)' }} className="table-row-hover">
-                                <td style={{ padding: '1rem' }}>
-                                    <div style={{ fontWeight: 500 }}>{payment.lease?.tenant?.full_name || 'Unknown'}</div>
-                                </td>
-                                <td style={{ padding: '1rem' }}>
-                                    <div style={{ fontSize: '0.9rem' }}>{payment.lease?.unit?.name || '-'}</div>
-                                    <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{payment.lease?.unit?.unit_code}</div>
-                                </td>
-                                <td style={{ padding: '1rem' }}>{formatDate(payment.paid_at || payment.due_date)}</td>
-                                <td style={{ padding: '1rem', fontWeight: 600 }}>
-                                    {payment.amount} {payment.currency || 'USD'}
-                                </td>
-                                <td style={{ padding: '1rem' }}>
-                                    <div style={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '0.5rem',
-                                        color: payment.status === 'paid' ? 'var(--success-color)' :
-                                            payment.status === 'overdue' ? 'var(--error-color)' : 'var(--warning-color)',
-                                        fontSize: '0.85rem'
-                                    }}>
-                                        {payment.status === 'paid' ? <CheckCircle size={14} /> : <Clock size={14} />}
-                                        <span style={{ textTransform: 'capitalize' }}>{payment.status}</span>
-                                    </div>
-                                    {payment.status === 'paid' && (
-                                        <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
-                                            via {payment.payment_method}
-                                        </div>
-                                    )}
-                                </td>
-                                <td style={{ padding: '1rem', textAlign: 'right' }}>
-                                    {payment.status !== 'paid' && (
-                                        <button
-                                            className="btn btn-primary"
-                                            style={{ padding: '0.4rem 0.8rem', fontSize: '0.75rem' }}
-                                            onClick={() => openRecordModal(payment)}
-                                        >
-                                            <PlusCircle size={14} />
-                                            Record
-                                        </button>
-                                    )}
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
-
-            <Modal
-                isOpen={isRecordModalOpen}
-                onClose={() => setIsRecordModalOpen(false)}
-                title="Record Received Payment"
-            >
-                {recordingPayment && (
-                    <div style={{ marginBottom: '1.5rem', padding: '1rem', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', border: '1px solid var(--panel-border)' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                            <span style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>Tenant</span>
-                            <span style={{ fontWeight: 600 }}>{recordingPayment.lease?.tenant?.full_name}</span>
+                        <div className="info-row">
+                            <span className="info-row-label">Amount Due</span>
+                            <span className="info-row-value text-accent">{fmt(recording.amount, recording.currency)}</span>
                         </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                            <span style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>Amount Due</span>
-                            <span style={{ fontWeight: 600, color: 'var(--accent-color)' }}>{recordingPayment.amount} {recordingPayment.currency || 'USD'}</span>
-                        </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                            <span style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>Due Date</span>
-                            <span>{formatDate(recordingPayment.due_date)}</span>
+                        <div className="info-row">
+                            <span className="info-row-label">Due Date</span>
+                            <span className="info-row-value">{formatDate(recording.due_date)}</span>
                         </div>
                     </div>
                 )}
-
-                <form onSubmit={handleRecordSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                        <label style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Payment Method</label>
-                        <select
-                            required
-                            className="glass"
-                            style={{ padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--panel-border)', color: 'white', background: 'rgba(255, 255, 255, 0.05)' }}
-                            value={recordData.payment_method}
-                            onChange={(e) => setRecordData({ ...recordData, payment_method: e.target.value })}
-                        >
-                            <option value="Bank Transfer" style={{ color: 'black' }}>Bank Transfer</option>
-                            <option value="Cash" style={{ color: 'black' }}>Cash</option>
-                            <option value="Check" style={{ color: 'black' }}>Check</option>
-                            <option value="Credit Card" style={{ color: 'black' }}>Credit Card</option>
-                            <option value="Other" style={{ color: 'black' }}>Other</option>
+                <form className="form-stack" onSubmit={handleRecord}>
+                    <div className="form-group">
+                        <label className="form-label">Payment Method</label>
+                        <select required className="form-select" value={recordData.payment_method} onChange={field('payment_method')}>
+                            {['Bank Transfer','Cash','Check','Credit Card','Other'].map(m => <option key={m} value={m}>{m}</option>)}
                         </select>
                     </div>
-
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                        <label style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Payment Date</label>
-                        <input
-                            type="date"
-                            required
-                            className="glass"
-                            style={{ padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--panel-border)', color: 'white', background: 'rgba(255, 255, 255, 0.05)' }}
-                            value={recordData.paid_at}
-                            onChange={(e) => setRecordData({ ...recordData, paid_at: e.target.value })}
-                        />
+                    <div className="form-group">
+                        <label className="form-label">Payment Date</label>
+                        <input type="date" required className="form-input" value={recordData.paid_at} onChange={field('paid_at')} />
                     </div>
-
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                        <label style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Reference # (Optional)</label>
-                        <input
-                            type="text"
-                            placeholder="Transaction ID, Receipt #, etc."
-                            className="glass"
-                            style={{ padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--panel-border)', color: 'white', background: 'rgba(255, 255, 255, 0.05)' }}
-                            value={recordData.reference}
-                            onChange={(e) => setRecordData({ ...recordData, reference: e.target.value })}
-                        />
+                    <div className="form-group">
+                        <label className="form-label">Reference # (optional)</label>
+                        <input type="text" className="form-input" placeholder="Transaction ID, Receipt #…" value={recordData.reference} onChange={field('reference')} />
                     </div>
-
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                        <label style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Notes</label>
-                        <textarea
-                            className="glass"
-                            placeholder="Add internal notes..."
-                            style={{ padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--panel-border)', color: 'white', background: 'rgba(255, 255, 255, 0.05)', minHeight: '80px', resize: 'vertical' }}
-                            value={recordData.notes}
-                            onChange={(e) => setRecordData({ ...recordData, notes: e.target.value })}
-                        />
+                    <div className="form-group">
+                        <label className="form-label">Notes</label>
+                        <textarea className="form-textarea" placeholder="Internal notes…" value={recordData.notes} onChange={field('notes')} style={{ minHeight: 70 }} />
                     </div>
-
-                    <button
-                        type="submit"
-                        className="btn btn-primary"
-                        disabled={submitting}
-                        style={{ marginTop: '0.5rem', justifyContent: 'center' }}
-                    >
-                        {submitting ? 'Recording...' : 'Record Payment'}
+                    <button type="submit" className="btn btn-primary btn-lg w-full" disabled={submitting}>
+                        {submitting ? 'Recording…' : 'Confirm Payment'}
                     </button>
                 </form>
             </Modal>
+
+            <div className="table-wrap">
+                <div className="filter-bar">
+                    <Filter size={14} style={{ color: 'var(--text-3)', flexShrink: 0 }} />
+                    <select
+                        className="form-select"
+                        style={{ width: 'auto', minWidth: 160, background: 'var(--surface-2)', border: '1px solid var(--border-md)', borderRadius: 'var(--radius)', padding: '5px 10px', fontSize: '0.875rem' }}
+                        value={filterTenant}
+                        onChange={(e) => setFilter(e.target.value)}
+                    >
+                        <option value="">All Tenants</option>
+                        {tenantNames.map(n => <option key={n} value={n}>{n}</option>)}
+                    </select>
+                    <span className="text-muted fs-sm" style={{ marginLeft: 'auto' }}>{filtered.length} records</span>
+                </div>
+
+                <div style={{ overflowX: 'auto' }}>
+                    <table className="table" style={{ minWidth: 640 }}>
+                        <thead>
+                            <tr>
+                                <th>Tenant</th>
+                                <th>Unit</th>
+                                <th>Date</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th style={{ textAlign: 'right' }}>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {loading ? (
+                                <tr><td colSpan="6" className="table-loading">Loading payments…</td></tr>
+                            ) : filtered.length === 0 ? (
+                                <tr><td colSpan="6" className="table-empty">No payment records found.</td></tr>
+                            ) : filtered.map((p) => (
+                                <tr key={p.id}>
+                                    <td>
+                                        <div className="user-cell">
+                                            <div className="avatar">{(p.lease?.tenant?.full_name || 'U').charAt(0)}</div>
+                                            <div className="user-cell-name">{p.lease?.tenant?.full_name || '—'}</div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div className="fs-sm">{p.lease?.unit?.name || '—'}</div>
+                                        <div className="fs-xs text-muted mt-4">{p.lease?.unit?.unit_code}</div>
+                                    </td>
+                                    <td className="fs-sm text-2">{formatDate(p.paid_at || p.due_date)}</td>
+                                    <td><span className="fw-600">{fmt(p.amount, p.currency)}</span></td>
+                                    <td>
+                                        <StatusBadge status={p.status} />
+                                        {p.status === 'paid' && p.payment_method && (
+                                            <div className="fs-xs text-muted mt-4">via {p.payment_method}</div>
+                                        )}
+                                    </td>
+                                    <td style={{ textAlign: 'right' }}>
+                                        {p.status !== 'paid' && (
+                                            <button className="btn btn-primary" style={{ padding: '5px 12px', fontSize: '0.8rem' }} onClick={() => openRecord(p)}>
+                                                <PlusCircle size={13} /> Record
+                                            </button>
+                                        )}
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     );
 };

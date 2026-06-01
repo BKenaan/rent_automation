@@ -1,330 +1,176 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Plus, Trash2, Edit2, Filter, Receipt, Calendar, Home, DollarSign } from 'lucide-react';
+import { Plus, Trash2, Edit2, Filter, Calendar, Building2 } from 'lucide-react';
 import { expensesApi, unitsApi } from '../api';
 import Modal from '../components/Modal';
 import { formatDate } from '../utils/dateUtils';
 
+const asArray = (x) => (Array.isArray(x) ? x : []);
+const fmt = (v) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(v);
+
+const CATS = ['Maintenance','Repairs','Utilities','Insurance','Taxes','Management Fee','Marketing','Other'];
+const BLANK = { unit_id: '', amount: '', category: CATS[0], date: new Date().toISOString().split('T')[0], description: '' };
+
 const Expenses = () => {
-    const [expenses, setExpenses] = useState([]);
-    const [units, setUnits] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [editingExpense, setEditingExpense] = useState(null);
-    const [filterUnitId, setFilterUnitId] = useState('');
-
-    const [formData, setFormData] = useState({
-        unit_id: '',
-        amount: '',
-        category: '',
-        date: new Date().toISOString().split('T')[0],
-        description: ''
-    });
+    const [expenses, setExpenses]   = useState([]);
+    const [units, setUnits]         = useState([]);
+    const [loading, setLoading]     = useState(true);
+    const [filterUnit, setFilter]   = useState('');
+    const [isModalOpen, setModal]   = useState(false);
+    const [editingExp, setEditing]  = useState(null);
+    const [formData, setFormData]   = useState(BLANK);
     const [submitting, setSubmitting] = useState(false);
-
-    const categories = [
-        'Maintenance',
-        'Repairs',
-        'Utilities',
-        'Insurance',
-        'Taxes',
-        'Management Fee',
-        'Marketing',
-        'Other'
-    ];
-
-    const asArray = (x) => (Array.isArray(x) ? x : []);
 
     const fetchData = async () => {
         setLoading(true);
         try {
-            const [expensesRes, unitsRes] = await Promise.all([
-                expensesApi.getAll(filterUnitId || undefined),
-                unitsApi.getAll()
-            ]);
-            setExpenses(asArray(expensesRes?.data));
-            setUnits(asArray(unitsRes?.data));
-        } catch (err) {
-            console.error("Error fetching expense data:", err);
-            setExpenses([]);
-            setUnits([]);
-        } finally {
-            setLoading(false);
-        }
+            const [eR, uR] = await Promise.all([expensesApi.getAll(filterUnit || undefined), unitsApi.getAll()]);
+            setExpenses(asArray(eR?.data)); setUnits(asArray(uR?.data));
+        } catch (err) { console.error(err); }
+        finally { setLoading(false); }
     };
 
-    useEffect(() => {
-        fetchData();
-    }, [filterUnitId]);
+    useEffect(() => { fetchData(); }, [filterUnit]);
 
-    const openCreateModal = () => {
-        setEditingExpense(null);
-        setFormData({
-            unit_id: '',
-            amount: '',
-            category: categories[0],
-            date: new Date().toISOString().split('T')[0],
-            description: ''
-        });
-        setIsModalOpen(true);
-    };
-
-    const openEditModal = (expense) => {
-        setEditingExpense(expense);
-        setFormData({
-            unit_id: expense.unit_id,
-            amount: expense.amount,
-            category: expense.category,
-            date: expense.date,
-            description: expense.description || ''
-        });
-        setIsModalOpen(true);
+    const openCreate = () => { setEditing(null); setFormData(BLANK); setModal(true); };
+    const openEdit   = (ex) => {
+        setEditing(ex);
+        setFormData({ unit_id: ex.unit_id, amount: ex.amount, category: ex.category, date: ex.date, description: ex.description || '' });
+        setModal(true);
     };
 
     const handleDelete = async (id) => {
-        if (!window.confirm("Are you sure you want to delete this expense record?")) return;
-        try {
-            await expensesApi.delete(id);
-            fetchData();
-        } catch (err) {
-            console.error("Error deleting expense:", err);
-            alert("Failed to delete expense.");
-        }
+        if (!window.confirm('Delete this expense record?')) return;
+        try { await expensesApi.delete(id); fetchData(); }
+        catch (err) { alert(err.response?.data?.detail || 'Failed to delete expense.'); }
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setSubmitting(true);
         try {
-            const payload = {
-                ...formData,
-                unit_id: Number(formData.unit_id),
-                amount: Number(formData.amount),
-            };
-
-            if (editingExpense) {
-                await expensesApi.update(editingExpense.id, payload);
-            } else {
-                await expensesApi.create(payload);
-            }
-
-            setIsModalOpen(false);
+            const payload = { ...formData, unit_id: Number(formData.unit_id), amount: Number(formData.amount) };
+            if (editingExp) await expensesApi.update(editingExp.id, payload);
+            else await expensesApi.create(payload);
+            setModal(false);
             fetchData();
         } catch (err) {
-            console.error("Error saving expense:", err);
-            alert("Failed to save expense. Please verify all fields.");
-        } finally {
-            setSubmitting(false);
-        }
+            alert(err.response?.data?.detail || 'Failed to save expense.');
+        } finally { setSubmitting(false); }
     };
 
-    const formatCurrency = (val) => {
-        return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val);
-    };
-
-    const getUnitName = (id) => {
-        return units.find(u => u.id === id)?.name || `Unit #${id}`;
-    };
+    const field = (k) => (e) => setFormData({ ...formData, [k]: e.target.value });
+    const unitName = (id) => units.find(u => u.id === id)?.name || `Unit #${id}`;
+    const totalShown = expenses.reduce((s, e) => s + Number(e.amount || 0), 0);
 
     return (
         <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+            <div className="page-header">
                 <div>
-                    <h1>Operational Expenses</h1>
-                    <p style={{ color: 'var(--text-secondary)' }}>Track and manage property-related costs and maintenance.</p>
+                    <h1 className="page-title">Operational Expenses</h1>
+                    <p className="page-subtitle">Track property-related costs and maintenance</p>
                 </div>
-                <button className="btn btn-primary" onClick={openCreateModal}>
-                    <Plus size={20} />
-                    Record Expense
-                </button>
+                <button className="btn btn-primary" onClick={openCreate}><Plus size={16} /> Record Expense</button>
             </div>
 
-            <div className="glass" style={{ padding: '1.5rem', marginBottom: '2rem' }}>
-                <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flex: 1 }}>
-                        <Filter size={18} color="var(--text-secondary)" />
-                        <select
-                            className="glass"
-                            style={{
-                                padding: '0.6rem 1rem',
-                                borderRadius: '8px',
-                                border: '1px solid var(--panel-border)',
-                                color: 'white',
-                                background: 'rgba(255, 255, 255, 0.05)',
-                                width: '100%'
-                            }}
-                            value={filterUnitId}
-                            onChange={(e) => setFilterUnitId(e.target.value)}
-                        >
-                            <option value="" style={{ color: 'black' }}>All Units</option>
-                            {units.map(u => (
-                                <option key={u.id} value={u.id} style={{ color: 'black' }}>{u.name} ({u.unit_code})</option>
-                            ))}
+            <Modal isOpen={isModalOpen} onClose={() => setModal(false)} title={editingExp ? 'Edit Expense' : 'Record Expense'}>
+                <form className="form-stack" onSubmit={handleSubmit}>
+                    <div className="form-group">
+                        <label className="form-label">Unit</label>
+                        <select required className="form-select" value={formData.unit_id} onChange={field('unit_id')}>
+                            <option value="">Select a unit</option>
+                            {units.map(u => <option key={u.id} value={u.id}>{u.name} ({u.unit_code})</option>)}
                         </select>
                     </div>
-                    <div style={{ flex: 2 }}>
-                        {/* Summary of visible expenses could go here */}
-                        <div style={{ textAlign: 'right', color: 'var(--text-secondary)' }}>
-                            Showing {expenses.length} records
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <Modal
-                isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
-                title={editingExpense ? "Edit Expense" : "Record New Expense"}
-            >
-                <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                        <label style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Unit</label>
-                        <select
-                            required
-                            className="glass"
-                            style={{ padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--panel-border)', color: 'white', background: 'rgba(255, 255, 255, 0.05)' }}
-                            value={formData.unit_id}
-                            onChange={(e) => setFormData({ ...formData, unit_id: e.target.value })}
-                        >
-                            <option value="" style={{ color: 'black' }}>Select a Unit</option>
-                            {units.map((unit) => (
-                                <option key={unit.id} value={unit.id} style={{ color: 'black' }}>
-                                    {unit.name} ({unit.unit_code})
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-
-                    <div style={{ display: 'flex', gap: '1rem' }}>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', flex: 1 }}>
-                            <label style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Category</label>
-                            <select
-                                required
-                                className="glass"
-                                style={{ padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--panel-border)', color: 'white', background: 'rgba(255, 255, 255, 0.05)' }}
-                                value={formData.category}
-                                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                            >
-                                {categories.map(cat => (
-                                    <option key={cat} value={cat} style={{ color: 'black' }}>{cat}</option>
-                                ))}
+                    <div className="form-row">
+                        <div className="form-group">
+                            <label className="form-label">Category</label>
+                            <select required className="form-select" value={formData.category} onChange={field('category')}>
+                                {CATS.map(c => <option key={c} value={c}>{c}</option>)}
                             </select>
                         </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', flex: 1 }}>
-                            <label style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Amount ($)</label>
-                            <input
-                                type="number"
-                                step="0.01"
-                                required
-                                className="glass"
-                                style={{ padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--panel-border)', color: 'white', background: 'rgba(255, 255, 255, 0.05)' }}
-                                value={formData.amount}
-                                onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                            />
+                        <div className="form-group">
+                            <label className="form-label">Amount ($)</label>
+                            <input type="number" step="0.01" required className="form-input" placeholder="0.00" value={formData.amount} onChange={field('amount')} />
                         </div>
                     </div>
-
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                        <label style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Date</label>
-                        <input
-                            type="date"
-                            required
-                            className="glass"
-                            style={{ padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--panel-border)', color: 'white', background: 'rgba(255, 255, 255, 0.05)' }}
-                            value={formData.date}
-                            onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                        />
+                    <div className="form-group">
+                        <label className="form-label">Date</label>
+                        <input type="date" required className="form-input" value={formData.date} onChange={field('date')} />
                     </div>
-
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                        <label style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Description</label>
-                        <textarea
-                            className="glass"
-                            placeholder="Details about the expense..."
-                            style={{ padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--panel-border)', color: 'white', background: 'rgba(255, 255, 255, 0.05)', minHeight: '100px', resize: 'vertical' }}
-                            value={formData.description}
-                            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                        />
+                    <div className="form-group">
+                        <label className="form-label">Description</label>
+                        <textarea className="form-textarea" placeholder="Details about this expense…" value={formData.description} onChange={field('description')} />
                     </div>
-
-                    <button
-                        type="submit"
-                        className="btn btn-primary"
-                        disabled={submitting}
-                        style={{ marginTop: '0.5rem', justifyContent: 'center' }}
-                    >
-                        {submitting ? 'Saving...' : editingExpense ? 'Update Expense' : 'Record Expense'}
+                    <button type="submit" className="btn btn-primary btn-lg w-full" disabled={submitting}>
+                        {submitting ? 'Saving…' : editingExp ? 'Update Expense' : 'Record Expense'}
                     </button>
                 </form>
             </Modal>
 
-            <div className="glass" style={{ padding: '1rem', overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-                    <thead>
-                        <tr style={{ color: 'var(--text-secondary)', borderBottom: '1px solid var(--panel-border)' }}>
-                            <th style={{ padding: '1rem' }}>Date</th>
-                            <th style={{ padding: '1rem' }}>Category</th>
-                            <th style={{ padding: '1rem' }}>Unit</th>
-                            <th style={{ padding: '1rem' }}>Description</th>
-                            <th style={{ padding: '1rem', textAlign: 'right' }}>Amount</th>
-                            <th style={{ padding: '1rem' }}>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {loading ? (
-                            <tr><td colSpan="6" style={{ textAlign: 'center', padding: '2rem' }}>Loading expenses...</td></tr>
-                        ) : expenses.length === 0 ? (
-                            <tr><td colSpan="6" style={{ textAlign: 'center', padding: '2rem' }}>No expense records found.</td></tr>
-                        ) : expenses.map((expense) => (
-                            <tr key={expense.id} style={{ borderBottom: '1px solid var(--panel-border)' }} className="table-row-hover">
-                                <td style={{ padding: '1rem', whiteSpace: 'nowrap' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                        <Calendar size={14} color="var(--text-secondary)" />
-                                        <span>{formatDate(expense.date)}</span>
-                                    </div>
-                                </td>
-                                <td style={{ padding: '1rem' }}>
-                                    <span style={{
-                                        padding: '0.2rem 0.6rem',
-                                        borderRadius: '4px',
-                                        fontSize: '0.75rem',
-                                        background: 'rgba(255, 255, 255, 0.05)',
-                                        border: '1px solid var(--panel-border)'
-                                    }}>
-                                        {expense.category}
-                                    </span>
-                                </td>
-                                <td style={{ padding: '1rem', whiteSpace: 'nowrap' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                        <Home size={14} color="var(--text-secondary)" />
-                                        <span>{getUnitName(expense.unit_id)}</span>
-                                    </div>
-                                </td>
-                                <td style={{ padding: '1rem', maxWidth: '300px', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                    <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>{expense.description || '-'}</span>
-                                </td>
-                                <td style={{ padding: '1rem', textAlign: 'right', fontWeight: 600, color: 'var(--accent-ruby)' }}>
-                                    {formatCurrency(expense.amount)}
-                                </td>
-                                <td style={{ padding: '1rem' }}>
-                                    <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                        <button
-                                            onClick={() => openEditModal(expense)}
-                                            style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer' }}
-                                        >
-                                            <Edit2 size={16} />
-                                        </button>
-                                        <button
-                                            onClick={() => handleDelete(expense.id)}
-                                            style={{ background: 'transparent', border: 'none', color: 'var(--error-color)', cursor: 'pointer' }}
-                                        >
-                                            <Trash2 size={16} />
-                                        </button>
-                                    </div>
-                                </td>
+            <div className="table-wrap">
+                <div className="filter-bar">
+                    <Filter size={14} style={{ color: 'var(--text-3)', flexShrink: 0 }} />
+                    <select
+                        className="form-select"
+                        style={{ width: 'auto', minWidth: 160, background: 'var(--surface-2)', border: '1px solid var(--border-md)', borderRadius: 'var(--radius)', padding: '5px 10px', fontSize: '0.875rem' }}
+                        value={filterUnit}
+                        onChange={(e) => setFilter(e.target.value)}
+                    >
+                        <option value="">All Units</option>
+                        {units.map(u => <option key={u.id} value={u.id}>{u.name} ({u.unit_code})</option>)}
+                    </select>
+                    <span className="text-muted fs-sm" style={{ marginLeft: 'auto' }}>
+                        {expenses.length} records · Total: <strong style={{ color: 'var(--red)' }}>{fmt(totalShown)}</strong>
+                    </span>
+                </div>
+
+                <div style={{ overflowX: 'auto' }}>
+                    <table className="table" style={{ minWidth: 600 }}>
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Category</th>
+                                <th>Unit</th>
+                                <th>Description</th>
+                                <th style={{ textAlign: 'right' }}>Amount</th>
+                                <th>Actions</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            {loading ? (
+                                <tr><td colSpan="6" className="table-loading">Loading expenses…</td></tr>
+                            ) : expenses.length === 0 ? (
+                                <tr><td colSpan="6" className="table-empty">No expense records found.</td></tr>
+                            ) : expenses.map((ex) => (
+                                <tr key={ex.id}>
+                                    <td>
+                                        <div className="flex-center gap-6 fs-sm text-2">
+                                            <Calendar size={12} /> {formatDate(ex.date)}
+                                        </div>
+                                    </td>
+                                    <td><span className="badge badge-neutral">{ex.category}</span></td>
+                                    <td>
+                                        <div className="flex-center gap-6 fs-sm text-2">
+                                            <Building2 size={12} /> {unitName(ex.unit_id)}
+                                        </div>
+                                    </td>
+                                    <td className="text-2 fs-sm" style={{ maxWidth: 240, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                        {ex.description || <span className="text-muted">—</span>}
+                                    </td>
+                                    <td style={{ textAlign: 'right' }}>
+                                        <span className="fw-600 text-red">{fmt(ex.amount)}</span>
+                                    </td>
+                                    <td>
+                                        <div className="flex-center gap-4">
+                                            <button className="btn btn-ghost btn-icon" title="Edit" onClick={() => openEdit(ex)}><Edit2 size={15} /></button>
+                                            <button className="btn btn-ghost btn-icon" title="Delete" onClick={() => handleDelete(ex.id)} style={{ color: 'var(--red)' }}><Trash2 size={15} /></button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     );

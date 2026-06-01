@@ -1,67 +1,30 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { X } from 'lucide-react';
 
-const Modal = ({ isOpen, onClose, title, children }) => {
+const Modal = ({ isOpen, onClose, title, children, wide }) => {
+    useEffect(() => {
+        if (!isOpen) return;
+        const onKey = (e) => { if (e.key === 'Escape') onClose(); };
+        document.addEventListener('keydown', onKey);
+        return () => document.removeEventListener('keydown', onKey);
+    }, [isOpen, onClose]);
+
     if (!isOpen) return null;
 
     return (
-        <div style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.7)',
-            backdropFilter: 'blur(5px)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1000,
-            padding: '1rem'
-        }} onClick={onClose}>
-            <div className="glass" style={{
-                width: '100%',
-                maxWidth: '500px',
-                padding: '2rem',
-                position: 'relative',
-                animation: 'modalFadeIn 0.3s ease-out'
-            }} onClick={e => e.stopPropagation()}>
-                <div style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    marginBottom: '1.5rem'
-                }}>
-                    <h2 style={{ margin: 0 }}>{title}</h2>
-                    <button
-                        onClick={onClose}
-                        style={{
-                            background: 'transparent',
-                            border: 'none',
-                            color: 'var(--text-secondary)',
-                            cursor: 'pointer',
-                            padding: '0.5rem',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            borderRadius: '50%',
-                            transition: 'background 0.2s'
-                        }}
-                        className="table-row-hover"
-                    >
-                        <X size={24} />
+        <div className="modal-backdrop" onClick={onClose}>
+            <div
+                className={`modal-box${wide ? ' modal-box-lg' : ''}`}
+                onClick={(e) => e.stopPropagation()}
+            >
+                <div className="modal-header">
+                    <h2>{title}</h2>
+                    <button className="btn btn-ghost btn-icon" onClick={onClose} aria-label="Close">
+                        <X size={18} />
                     </button>
                 </div>
                 {children}
             </div>
-            <style>
-                {`
-                @keyframes modalFadeIn {
-                    from { opacity: 0; transform: translateY(20px); }
-                    to { opacity: 1; transform: translateY(0); }
-                }
-                `}
-            </style>
         </div>
     );
 };

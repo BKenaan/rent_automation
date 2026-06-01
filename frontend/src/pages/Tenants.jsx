@@ -1,318 +1,191 @@
 import React, { useState, useEffect } from 'react';
-import { Search, UserPlus, MoreVertical, Mail, Phone, Edit2, Trash2, FileText, Download } from 'lucide-react';
+import { Search, UserPlus, Mail, Phone, Edit2, Trash2, FileText, Download } from 'lucide-react';
 import { tenantsApi, unitsApi, statementsApi } from '../api';
 import Modal from '../components/Modal';
 import { formatDate } from '../utils/dateUtils';
 
+const fmt = (v) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(v);
+const asArray = (x) => (Array.isArray(x) ? x : []);
+
 const Tenants = () => {
-    const [tenants, setTenants] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const [tenants, setTenants]       = useState([]);
+    const [units, setUnits]           = useState([]);
+    const [search, setSearch]         = useState('');
+    const [loading, setLoading]       = useState(true);
+    const [submitting, setSubmitting] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingTenant, setEditingTenant] = useState(null);
-    const [formData, setFormData] = useState({
-        full_name: '',
-        email: '',
-        phone: '',
-        notes: '',
-        preferred_unit_id: ''
-    });
-    const [submitting, setSubmitting] = useState(false);
-    const [units, setUnits] = useState([]);
-    const [unitsLoading, setUnitsLoading] = useState(false);
+    const [formData, setFormData] = useState({ full_name: '', email: '', phone: '', notes: '', preferred_unit_id: '' });
 
-    // Statement Modal State
     const [isStatementOpen, setIsStatementOpen] = useState(false);
-    const [statementData, setStatementData] = useState(null);
+    const [statementData, setStatementData]     = useState(null);
     const [statementLoading, setStatementLoading] = useState(false);
 
-    const asArray = (x) => (Array.isArray(x) ? x : []);
-
-    const fetchTenants = async () => {
+    const fetchAll = async () => {
         setLoading(true);
         try {
-            const res = await tenantsApi.getAll();
-            setTenants(asArray(res?.data));
+            const [tR, uR] = await Promise.all([tenantsApi.getAll(), unitsApi.getAll()]);
+            setTenants(asArray(tR?.data));
+            setUnits(asArray(uR?.data));
         } catch (err) {
-            console.error("Error fetching tenants:", err);
-            setTenants([]);
+            console.error('Error fetching tenants:', err);
         } finally {
             setLoading(false);
         }
     };
 
-    const fetchUnits = async () => {
-        setUnitsLoading(true);
-        try {
-            const res = await unitsApi.getAll();
-            setUnits(asArray(res?.data));
-        } catch (err) {
-            console.error("Error fetching units:", err);
-            setUnits([]);
-        } finally {
-            setUnitsLoading(false);
-        }
-    };
+    useEffect(() => { fetchAll(); }, []);
 
-    useEffect(() => {
-        fetchTenants();
-        fetchUnits();
-    }, []);
-
-    const openStatement = async (tenantId) => {
-        setStatementLoading(true);
-        setIsStatementOpen(true);
-        try {
-            const res = await statementsApi.getStatement(tenantId);
-            const data = res?.data;
-            setStatementData(data ? { ...data, transactions: asArray(data.transactions) } : null);
-        } catch (err) {
-            console.error("Error fetching statement:", err);
-            alert("Failed to load account statement.");
-            setIsStatementOpen(false);
-        } finally {
-            setStatementLoading(false);
-        }
-    };
-
-    const downloadPdf = async (tenantId, tenantName) => {
-        try {
-            const res = await statementsApi.downloadPdf(tenantId);
-            const url = window.URL.createObjectURL(new Blob([res.data]));
-            const link = document.createElement('a');
-            link.href = url;
-            link.setAttribute('download', `Statement_${tenantName.replace(/\s+/g, '_')}.pdf`);
-            document.body.appendChild(link);
-            link.click();
-            link.remove();
-        } catch (err) {
-            console.error("Error downloading PDF:", err);
-            alert("Failed to generate PDF statement.");
-        }
-    };
-
-    const openCreateModal = () => {
+    const openCreate = () => {
         setEditingTenant(null);
-        setFormData({
-            full_name: '',
-            email: '',
-            phone: '',
-            notes: '',
-            preferred_unit_id: ''
-        });
+        setFormData({ full_name: '', email: '', phone: '', notes: '', preferred_unit_id: '' });
         setIsModalOpen(true);
     };
 
-    const openEditModal = (tenant) => {
-        setEditingTenant(tenant);
-        setFormData({
-            full_name: tenant.full_name,
-            email: tenant.email,
-            phone: tenant.phone,
-            notes: tenant.notes || '',
-            preferred_unit_id: tenant.preferred_unit_id || ''
-        });
+    const openEdit = (t) => {
+        setEditingTenant(t);
+        setFormData({ full_name: t.full_name, email: t.email, phone: t.phone, notes: t.notes || '', preferred_unit_id: t.preferred_unit_id || '' });
         setIsModalOpen(true);
     };
 
     const handleDelete = async (id) => {
-        if (!window.confirm("Are you sure you want to delete this tenant? This action cannot be undone.")) return;
-        try {
-            await tenantsApi.delete(id);
-            fetchTenants();
-        } catch (err) {
-            console.error("Error deleting tenant:", err);
-            alert("Failed to delete tenant.");
-        }
+        if (!window.confirm('Are you sure you want to delete this tenant? This cannot be undone.')) return;
+        try { await tenantsApi.delete(id); fetchAll(); }
+        catch (err) { alert(err.response?.data?.detail || 'Failed to delete tenant.'); }
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setSubmitting(true);
         try {
-            const payload = {
-                ...formData,
-                preferred_unit_id: formData.preferred_unit_id
-                    ? Number(formData.preferred_unit_id)
-                    : null,
-            };
-
-            if (editingTenant) {
-                await tenantsApi.update(editingTenant.id, payload);
-            } else {
-                await tenantsApi.create(payload);
-            }
-
+            const payload = { ...formData, preferred_unit_id: formData.preferred_unit_id ? Number(formData.preferred_unit_id) : null };
+            if (editingTenant) await tenantsApi.update(editingTenant.id, payload);
+            else await tenantsApi.create(payload);
             setIsModalOpen(false);
-            fetchTenants();
+            fetchAll();
         } catch (err) {
-            console.error("Error saving tenant:", err);
-            alert("Failed to save tenant. Please check the inputs.");
+            alert(err.response?.data?.detail || 'Failed to save tenant.');
         } finally {
             setSubmitting(false);
         }
     };
 
-    const formatCurrency = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val);
+    const openStatement = async (id) => {
+        setStatementLoading(true);
+        setIsStatementOpen(true);
+        setStatementData(null);
+        try {
+            const res = await statementsApi.getStatement(id);
+            const d = res?.data;
+            setStatementData(d ? { ...d, transactions: asArray(d.transactions) } : null);
+        } catch { alert('Failed to load statement.'); setIsStatementOpen(false); }
+        finally { setStatementLoading(false); }
+    };
+
+    const downloadPdf = async (tenantId, name) => {
+        try {
+            const res = await statementsApi.downloadPdf(tenantId);
+            const url = window.URL.createObjectURL(new Blob([res.data]));
+            const a   = document.createElement('a');
+            a.href = url; a.setAttribute('download', `Statement_${name.replace(/\s+/g,'_')}.pdf`);
+            document.body.appendChild(a); a.click(); a.remove();
+        } catch { alert('Failed to generate PDF.'); }
+    };
+
+    const field = (k) => (e) => setFormData({ ...formData, [k]: e.target.value });
+    const filtered = tenants.filter(t => t.full_name.toLowerCase().includes(search.toLowerCase()) || t.email.toLowerCase().includes(search.toLowerCase()));
+    const unitName = (id) => units.find(u => u.id === id)?.name || '—';
 
     return (
         <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+            <div className="page-header">
                 <div>
-                    <h1>Tenants</h1>
-                    <p style={{ color: 'var(--text-secondary)' }}>Manage and monitor your community members.</p>
+                    <h1 className="page-title">Tenants</h1>
+                    <p className="page-subtitle">Manage and monitor your tenants</p>
                 </div>
-                <button className="btn btn-primary" onClick={openCreateModal}>
-                    <UserPlus size={20} />
-                    Add Tenant
+                <button className="btn btn-primary" onClick={openCreate}>
+                    <UserPlus size={16} /> Add Tenant
                 </button>
             </div>
 
-            <Modal
-                isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
-                title={editingTenant ? "Edit Tenant" : "Add New Tenant"}
-            >
-                <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                        <label style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Full Name</label>
-                        <input
-                            type="text"
-                            required
-                            className="glass"
-                            style={{ padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--panel-border)', color: 'white', background: 'rgba(255, 255, 255, 0.05)' }}
-                            value={formData.full_name}
-                            onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-                        />
+            {/* Tenant form modal */}
+            <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editingTenant ? 'Edit Tenant' : 'Add Tenant'}>
+                <form className="form-stack" onSubmit={handleSubmit}>
+                    <div className="form-group">
+                        <label className="form-label">Full Name</label>
+                        <input type="text" required className="form-input" value={formData.full_name} onChange={field('full_name')} placeholder="Jane Smith" />
                     </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                        <label style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Email</label>
-                        <input
-                            type="email"
-                            required
-                            className="glass"
-                            style={{ padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--panel-border)', color: 'white', background: 'rgba(255, 255, 255, 0.05)' }}
-                            value={formData.email}
-                            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                        />
+                    <div className="form-row">
+                        <div className="form-group">
+                            <label className="form-label">Email</label>
+                            <input type="email" required className="form-input" value={formData.email} onChange={field('email')} placeholder="jane@example.com" />
+                        </div>
+                        <div className="form-group">
+                            <label className="form-label">Phone</label>
+                            <input type="text" required className="form-input" value={formData.phone} onChange={field('phone')} placeholder="+1 555 0000" />
+                        </div>
                     </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                        <label style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Link to Unit (optional)</label>
-                        <select
-                            className="glass"
-                            style={{ padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--panel-border)', color: 'white', background: 'rgba(255, 255, 255, 0.05)' }}
-                            value={formData.preferred_unit_id}
-                            onChange={(e) => setFormData({ ...formData, preferred_unit_id: e.target.value })}
-                            disabled={unitsLoading}
-                        >
-                            <option value="" style={{ color: 'black' }}>
-                                {unitsLoading ? 'Loading units...' : 'No unit (assign later)'}
-                            </option>
-                            {units.map((unit) => (
-                                <option key={unit.id} value={unit.id} style={{ color: 'black' }}>
-                                    {unit.name} ({unit.unit_code})
-                                </option>
-                            ))}
+                    <div className="form-group">
+                        <label className="form-label">Link to Unit (optional)</label>
+                        <select className="form-select" value={formData.preferred_unit_id} onChange={field('preferred_unit_id')}>
+                            <option value="">No unit — assign later</option>
+                            {units.map(u => <option key={u.id} value={u.id}>{u.name} ({u.unit_code})</option>)}
                         </select>
                     </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                        <label style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Phone Number</label>
-                        <input
-                            type="text"
-                            required
-                            className="glass"
-                            style={{ padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--panel-border)', color: 'white', background: 'rgba(255, 255, 255, 0.05)' }}
-                            value={formData.phone}
-                            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                        />
+                    <div className="form-group">
+                        <label className="form-label">Notes</label>
+                        <textarea className="form-textarea" value={formData.notes} onChange={field('notes')} placeholder="Internal notes…" />
                     </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                        <label style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Notes</label>
-                        <textarea
-                            className="glass"
-                            style={{ padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--panel-border)', color: 'white', background: 'rgba(255, 255, 255, 0.05)', minHeight: '100px', resize: 'vertical' }}
-                            value={formData.notes}
-                            onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                        />
-                    </div>
-                    <button
-                        type="submit"
-                        className="btn btn-primary"
-                        disabled={submitting}
-                        style={{ marginTop: '0.5rem', justifyContent: 'center' }}
-                    >
-                        {submitting ? 'Saving...' : editingTenant ? 'Update Tenant' : 'Create Tenant'}
+                    <button type="submit" className="btn btn-primary btn-lg w-full" disabled={submitting}>
+                        {submitting ? 'Saving…' : editingTenant ? 'Update Tenant' : 'Create Tenant'}
                     </button>
                 </form>
             </Modal>
 
-            <Modal
-                isOpen={isStatementOpen}
-                onClose={() => setIsStatementOpen(false)}
-                title="Statement of Account"
-            >
+            {/* Statement modal */}
+            <Modal isOpen={isStatementOpen} onClose={() => setIsStatementOpen(false)} title="Statement of Account" wide>
                 {statementLoading ? (
-                    <div style={{ textAlign: 'center', padding: '2rem' }}>Loading statement...</div>
+                    <div className="table-loading">Loading statement…</div>
                 ) : statementData ? (
                     <div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '2rem' }}>
+                        <div className="page-header" style={{ marginBottom: 16 }}>
                             <div>
-                                <h2 style={{ margin: 0 }}>{statementData.tenant_name}</h2>
-                                <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>{statementData.unit_name}</p>
+                                <h3 style={{ margin: 0 }}>{statementData.tenant_name}</h3>
+                                <p className="text-muted fs-sm mt-4">{statementData.unit_name}</p>
                             </div>
                             <button
-                                className="btn btn-primary"
-                                style={{ padding: '0.5rem 1rem' }}
-                                onClick={() => downloadPdf(statementData.tenant_id || tenants.find(t => t.full_name === statementData.tenant_name)?.id, statementData.tenant_name)}
+                                className="btn btn-secondary"
+                                onClick={() => downloadPdf(tenants.find(t => t.full_name === statementData.tenant_name)?.id, statementData.tenant_name)}
                             >
-                                <Download size={18} />
-                                Export PDF
+                                <Download size={15} /> Export PDF
                             </button>
                         </div>
-
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem', marginBottom: '2rem' }}>
-                            <div className="glass" style={{ padding: '1rem', textAlign: 'center' }}>
-                                <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Total Due</div>
-                                <div style={{ fontSize: '1.25rem', fontWeight: 700 }}>{formatCurrency(statementData.total_due)}</div>
+                        <div className="statement-summary">
+                            <div className="statement-cell">
+                                <div className="statement-cell-label">Total Due</div>
+                                <div className="statement-cell-value">{fmt(statementData.total_due)}</div>
                             </div>
-                            <div className="glass" style={{ padding: '1rem', textAlign: 'center' }}>
-                                <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Total Paid</div>
-                                <div style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--success-color)' }}>{formatCurrency(statementData.total_paid)}</div>
+                            <div className="statement-cell">
+                                <div className="statement-cell-label">Total Paid</div>
+                                <div className="statement-cell-value text-green">{fmt(statementData.total_paid)}</div>
                             </div>
-                            <div className="glass" style={{ padding: '1rem', textAlign: 'center' }}>
-                                <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Outstanding</div>
-                                <div style={{ fontSize: '1.25rem', fontWeight: 700, color: statementData.balance > 0 ? 'var(--error-color)' : 'var(--success-color)' }}>
-                                    {formatCurrency(statementData.balance)}
-                                </div>
+                            <div className="statement-cell">
+                                <div className="statement-cell-label">Outstanding</div>
+                                <div className={`statement-cell-value ${statementData.balance > 0 ? 'text-red' : 'text-green'}`}>{fmt(statementData.balance)}</div>
                             </div>
                         </div>
-
-                        <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
-                            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.85rem' }}>
-                                <thead style={{ position: 'sticky', top: 0, background: 'var(--panel-bg)', zIndex: 1 }}>
-                                    <tr style={{ color: 'var(--text-secondary)', borderBottom: '1px solid var(--panel-border)' }}>
-                                        <th style={{ padding: '0.75rem' }}>Date</th>
-                                        <th style={{ padding: '0.75rem' }}>Description</th>
-                                        <th style={{ padding: '0.75rem' }}>Amount</th>
-                                        <th style={{ padding: '0.75rem' }}>Status</th>
-                                    </tr>
+                        <div style={{ maxHeight: 300, overflowY: 'auto' }}>
+                            <table className="table">
+                                <thead>
+                                    <tr><th>Date</th><th>Description</th><th>Amount</th><th>Status</th></tr>
                                 </thead>
                                 <tbody>
-                                    {(Array.isArray(statementData.transactions) ? statementData.transactions : []).map((t, idx) => (
-                                        <tr key={idx} style={{ borderBottom: '1px solid var(--panel-border)' }}>
-                                            <td style={{ padding: '0.75rem' }}>{formatDate(t.date)}</td>
-                                            <td style={{ padding: '0.75rem' }}>{t.description}</td>
-                                            <td style={{ padding: '0.75rem', fontWeight: 600 }}>{formatCurrency(t.amount)}</td>
-                                            <td style={{ padding: '0.75rem' }}>
-                                                <span style={{
-                                                    padding: '0.2rem 0.5rem',
-                                                    borderRadius: '4px',
-                                                    fontSize: '0.7rem',
-                                                    background: t.status === 'paid' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(255, 255, 255, 0.05)',
-                                                    color: t.status === 'paid' ? 'var(--success-color)' : 'var(--text-secondary)'
-                                                }}>
-                                                    {t.status.toUpperCase()}
-                                                </span>
-                                            </td>
+                                    {statementData.transactions.map((t, i) => (
+                                        <tr key={i}>
+                                            <td>{formatDate(t.date)}</td>
+                                            <td className="text-2">{t.description}</td>
+                                            <td className="fw-600">{fmt(t.amount)}</td>
+                                            <td><span className={`badge ${t.status === 'paid' ? 'badge-green' : t.status === 'overdue' ? 'badge-red' : 'badge-yellow'}`}>{t.status}</span></td>
                                         </tr>
                                     ))}
                                 </tbody>
@@ -322,115 +195,63 @@ const Tenants = () => {
                 ) : null}
             </Modal>
 
-            <div className="glass" style={{ padding: '1rem' }}>
-                <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', padding: '0.5rem' }}>
-                    <div className="glass" style={{
-                        flex: 1,
-                        display: 'flex',
-                        alignItems: 'center',
-                        padding: '0.5rem 1rem',
-                        gap: '0.75rem',
-                        borderRadius: '10px'
-                    }}>
-                        <Search size={18} color="var(--text-secondary)" />
-                        <input
-                            type="text"
-                            placeholder="Search tenants..."
-                            style={{
-                                background: 'transparent',
-                                border: 'none',
-                                color: 'white',
-                                outline: 'none',
-                                width: '100%'
-                            }}
-                        />
+            <div className="table-wrap">
+                <div className="filter-bar">
+                    <div className="search-wrap">
+                        <Search size={14} style={{ color: 'var(--text-3)', flexShrink: 0 }} />
+                        <input placeholder="Search tenants…" value={search} onChange={(e) => setSearch(e.target.value)} />
                     </div>
+                    <span className="text-muted fs-sm" style={{ marginLeft: 'auto' }}>{filtered.length} tenants</span>
                 </div>
 
-                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                <table className="table">
                     <thead>
-                        <tr style={{ color: 'var(--text-secondary)', borderBottom: '1px solid var(--panel-border)' }}>
-                            <th style={{ padding: '1rem' }}>Name</th>
-                            <th style={{ padding: '1rem' }}>Contact</th>
-                            <th style={{ padding: '1rem' }}>Unit</th>
-                            <th style={{ padding: '1rem' }}>Status</th>
-                            <th style={{ padding: '1rem', textAlign: 'right' }}>Actions</th>
+                        <tr>
+                            <th>Tenant</th>
+                            <th>Contact</th>
+                            <th>Unit</th>
+                            <th>Status</th>
+                            <th style={{ textAlign: 'right' }}>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         {loading ? (
-                            <tr><td colSpan="5" style={{ textAlign: 'center', padding: '2rem' }}>Loading tenants...</td></tr>
-                        ) : tenants.length === 0 ? (
-                            <tr><td colSpan="5" style={{ textAlign: 'center', padding: '2rem' }}>No tenants found.</td></tr>
-                        ) : tenants.map((tenant) => (
-                            <tr key={tenant.id} style={{ borderBottom: '1px solid var(--panel-border)', transition: 'background 0.2s' }} className="table-row-hover">
-                                <td style={{ padding: '1rem' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                                        <div style={{
-                                            width: '32px',
-                                            height: '32px',
-                                            borderRadius: '8px',
-                                            background: 'var(--accent-glow)',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            color: 'var(--accent-color)',
-                                            fontWeight: 600
-                                        }}>
-                                            {tenant.full_name.charAt(0)}
-                                        </div>
-                                        <span>{tenant.full_name}</span>
-                                    </div>
-                                </td>
-                                <td style={{ padding: '1rem' }}>
-                                    <div style={{ display: 'flex', flexDirection: 'column', fontSize: '0.85rem' }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                            <Mail size={14} color="var(--text-secondary)" />
-                                            <span>{tenant.email}</span>
-                                        </div>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                            <Phone size={14} color="var(--text-secondary)" />
-                                            <span>{tenant.phone}</span>
+                            <tr><td colSpan="5" className="table-loading">Loading tenants…</td></tr>
+                        ) : filtered.length === 0 ? (
+                            <tr><td colSpan="5" className="table-empty">
+                                {search ? `No tenants matching "${search}"` : 'No tenants yet. Add your first tenant.'}
+                            </td></tr>
+                        ) : filtered.map((t) => (
+                            <tr key={t.id}>
+                                <td>
+                                    <div className="user-cell">
+                                        <div className="avatar">{t.full_name.charAt(0)}</div>
+                                        <div>
+                                            <div className="user-cell-name">{t.full_name}</div>
+                                            <div className="user-cell-sub">Added {formatDate(t.created_at)}</div>
                                         </div>
                                     </div>
                                 </td>
-                                <td style={{ padding: '1rem' }}>
-                                    {tenant.preferred_unit_id
-                                        ? units.find(u => u.id === tenant.preferred_unit_id)?.name || 'Unknown Unit'
-                                        : 'Not Assigned'}
+                                <td>
+                                    <div className="flex-center gap-6 fs-sm text-2 mt-4">
+                                        <Mail size={12} /> {t.email}
+                                    </div>
+                                    <div className="flex-center gap-6 fs-sm text-muted mt-4">
+                                        <Phone size={12} /> {t.phone}
+                                    </div>
                                 </td>
-
-                                <td style={{ padding: '1rem' }}>
-                                    <span style={{
-                                        padding: '0.25rem 0.75rem',
-                                        borderRadius: '20px',
-                                        fontSize: '0.75rem',
-                                        background: 'rgba(16, 185, 129, 0.1)',
-                                        color: 'var(--success-color)'
-                                    }}>
-                                        Active
-                                    </span>
-                                </td>
-                                <td style={{ padding: '1rem', textAlign: 'right' }}>
-                                    <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
-                                        <button
-                                            onClick={() => openStatement(tenant.id)}
-                                            style={{ background: 'transparent', border: 'none', color: 'var(--accent-color)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.8rem' }}
-                                        >
-                                            <FileText size={16} />
-                                            Statement
+                                <td className="text-2 fs-sm">{t.preferred_unit_id ? unitName(t.preferred_unit_id) : <span className="text-muted">Not assigned</span>}</td>
+                                <td><span className="badge badge-green">Active</span></td>
+                                <td>
+                                    <div className="flex-center gap-4" style={{ justifyContent: 'flex-end' }}>
+                                        <button className="btn btn-ghost btn-icon" title="Statement" onClick={() => openStatement(t.id)}>
+                                            <FileText size={15} />
                                         </button>
-                                        <button
-                                            onClick={() => openEditModal(tenant)}
-                                            style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer' }}
-                                        >
-                                            <Edit2 size={16} />
+                                        <button className="btn btn-ghost btn-icon" title="Edit" onClick={() => openEdit(t)}>
+                                            <Edit2 size={15} />
                                         </button>
-                                        <button
-                                            onClick={() => handleDelete(tenant.id)}
-                                            style={{ background: 'transparent', border: 'none', color: 'var(--error-color)', cursor: 'pointer' }}
-                                        >
-                                            <Trash2 size={16} />
+                                        <button className="btn btn-ghost btn-icon" title="Delete" onClick={() => handleDelete(t.id)} style={{ color: 'var(--red)' }}>
+                                            <Trash2 size={15} />
                                         </button>
                                     </div>
                                 </td>

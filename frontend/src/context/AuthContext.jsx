@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
+import React, { createContext, useState, useContext, useCallback } from 'react';
 import { authApi } from '../api';
 
 const AuthContext = createContext(null);
@@ -17,19 +17,22 @@ export const AuthProvider = ({ children }) => {
         const stored = localStorage.getItem('token');
         if (stored && !isTokenExpired(stored)) return stored;
         localStorage.removeItem('token');
+        localStorage.removeItem('username');
         return null;
     });
-    const [loading, setLoading] = useState(false);
 
-    const login = useCallback(async (username, password) => {
+    const [username, setUsername] = useState(() => localStorage.getItem('username') || '');
+
+    const login = useCallback(async (uname, password) => {
         const formData = new FormData();
-        formData.append('username', username);
+        formData.append('username', uname);
         formData.append('password', password);
-
         const res = await authApi.login(formData);
         const newToken = res.data.access_token;
         localStorage.setItem('token', newToken);
+        localStorage.setItem('username', uname);
         setToken(newToken);
+        setUsername(uname);
         return res.data;
     }, []);
 
@@ -40,11 +43,13 @@ export const AuthProvider = ({ children }) => {
 
     const logout = useCallback(() => {
         localStorage.removeItem('token');
+        localStorage.removeItem('username');
         setToken(null);
+        setUsername('');
     }, []);
 
     return (
-        <AuthContext.Provider value={{ token, login, logout, register, loading }}>
+        <AuthContext.Provider value={{ token, username, login, logout, register }}>
             {children}
         </AuthContext.Provider>
     );
