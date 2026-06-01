@@ -12,10 +12,10 @@
   --border-md:   rgba(255,255,255,0.11);
   --border-lg:   rgba(255,255,255,0.18);
 
-  --accent:        #10b981;
-  --accent-hover:  #34d399;
-  --accent-dim:    rgba(16,185,129,0.12);
-  --accent-border: rgba(16,185,129,0.35);
+  --accent:        #8b5cf6;
+  --accent-hover:  #a78bfa;
+  --accent-dim:    rgba(139,92,246,0.12);
+  --accent-border: rgba(139,92,246,0.35);
 
   --text:   #f4f4f5;
   --text-2: #a1a1aa;
@@ -191,7 +191,7 @@ h3 { font-size: 1rem;   font-weight: 600; }
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--accent), #059669);
+  background: linear-gradient(135deg, var(--accent), #6d28d9);
   display: flex;
   align-items: center;
   justify-content: center;
