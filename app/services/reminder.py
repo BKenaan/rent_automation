@@ -1,3 +1,4 @@
+from contextlib import contextmanager
 from datetime import date, datetime, timezone
 from sqlalchemy.orm import Session
 from app.models.payment_schedule import PaymentSchedule
@@ -6,53 +7,50 @@ from app.models.notification_log import NotificationLog
 from app.services.notification import notification_service
 from app.db.session import SessionLocal
 
+@contextmanager
+def _get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
 class ReminderService:
     @staticmethod
     async def process_reminders():
         """
         Check for payments due today or overdue and send notifications.
         """
-        db = SessionLocal()
-        try:
+        from datetime import timedelta
+        with _get_db() as db:
             today = date.today()
-            from datetime import timedelta
             upcoming_7_days = today + timedelta(days=7)
 
-            # 1. Check for payments due in 7 days
             upcoming = db.query(PaymentSchedule).filter(
                 PaymentSchedule.due_date == upcoming_7_days,
                 PaymentSchedule.status == PaymentStatus.PENDING
             ).all()
-
             for schedule in upcoming:
                 await ReminderService.send_reminder(db, schedule, NotificationType.RENT_UPCOMING)
 
-            # 2. Check for payments due today
             due_today = db.query(PaymentSchedule).filter(
                 PaymentSchedule.due_date == today,
                 PaymentSchedule.status == PaymentStatus.PENDING
             ).all()
-
             for schedule in due_today:
                 await ReminderService.send_reminder(db, schedule, NotificationType.RENT_DUE)
 
-            # 3. Check for overdue payments
             overdue = db.query(PaymentSchedule).filter(
                 PaymentSchedule.due_date < today,
                 PaymentSchedule.status == PaymentStatus.PENDING
             ).all()
-
             for schedule in overdue:
-                # Mark as overdue if not already
                 if schedule.status != PaymentStatus.OVERDUE:
                     schedule.status = PaymentStatus.OVERDUE
                     db.add(schedule)
-                
                 await ReminderService.send_reminder(db, schedule, NotificationType.RENT_OVERDUE)
 
             db.commit()
-        finally:
-            db.close()
 
     @staticmethod
     async def send_reminder(db: Session, schedule: PaymentSchedule, msg_type: NotificationType):

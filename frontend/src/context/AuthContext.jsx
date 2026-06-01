@@ -1,51 +1,50 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
 import { authApi } from '../api';
 
 const AuthContext = createContext(null);
 
+function isTokenExpired(token) {
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        return payload.exp * 1000 < Date.now();
+    } catch {
+        return true;
+    }
+}
+
 export const AuthProvider = ({ children }) => {
-    const [user, setUser] = useState(null);
-    const [token, setToken] = useState(localStorage.getItem('token'));
-    const [loading, setLoading] = useState(true);
+    const [token, setToken] = useState(() => {
+        const stored = localStorage.getItem('token');
+        if (stored && !isTokenExpired(stored)) return stored;
+        localStorage.removeItem('token');
+        return null;
+    });
+    const [loading, setLoading] = useState(false);
 
-    useEffect(() => {
-        if (token) {
-            localStorage.setItem('token', token);
-            // In a real app, we might fetch the user profile here to verify the token
-            // For now, we'll just assume token exists = user logged in
-            // setUser({ token }); 
-        } else {
-            localStorage.removeItem('token');
-            setUser(null);
-        }
-        setLoading(false);
-    }, [token]);
-
-    const login = async (username, password) => {
+    const login = useCallback(async (username, password) => {
         const formData = new FormData();
         formData.append('username', username);
         formData.append('password', password);
 
         const res = await authApi.login(formData);
         const newToken = res.data.access_token;
-        // Set token in localStorage immediately so the next page / API calls use it (no race with navigate)
         localStorage.setItem('token', newToken);
         setToken(newToken);
         return res.data;
-    };
+    }, []);
 
-    const register = async (userData) => {
+    const register = useCallback(async (userData) => {
         const res = await authApi.register(userData);
         return res.data;
-    };
+    }, []);
 
-    const logout = () => {
+    const logout = useCallback(() => {
+        localStorage.removeItem('token');
         setToken(null);
-        setUser(null);
-    };
+    }, []);
 
     return (
-        <AuthContext.Provider value={{ user, token, login, logout, register, loading }}>
+        <AuthContext.Provider value={{ token, login, logout, register, loading }}>
             {children}
         </AuthContext.Provider>
     );

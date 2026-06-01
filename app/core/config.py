@@ -51,12 +51,14 @@ class Settings(BaseSettings):
 
     model_config = SettingsConfigDict(env_file=".env", case_sensitive=True, extra="ignore")
 
-    # Security
-    SECRET_KEY: str = "7290eb64817a7e8706a1478144883461" # Generatated for dev
+    # Security — SECRET_KEY must be set in .env; never hardcode it
+    SECRET_KEY: str
     ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7 # 7 days
-    PASSWORD_RESET_EXPIRE_MINUTES: int = 60  # 1 hour for reset link
-    FRONTEND_URL: str = "http://localhost:5173"  # Base URL for password reset link in email
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60  # 1 hour
+    PASSWORD_RESET_EXPIRE_MINUTES: int = 60
+    FRONTEND_URL: str = "http://localhost:5173"
+    # Comma-separated list of allowed CORS origins, e.g. "http://localhost:5173,https://yourdomain.com"
+    CORS_ALLOWED_ORIGINS: str = "http://localhost:5173"
     
     # Notifications
     ZAPIER_WEBHOOK_URL: str | None = None

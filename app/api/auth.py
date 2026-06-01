@@ -1,5 +1,6 @@
+import logging
 from datetime import timedelta
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from app.db.session import get_db
@@ -10,11 +11,15 @@ from app.schemas.token import Token
 from app.core import security
 from app.core.config import settings
 from app.services.notification import notification_service
+from app.core.limiter import limiter
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 @router.post("/register", response_model=User)
-def register(user_in: UserCreate, db: Session = Depends(get_db)):
+@limiter.limit("5/minute")
+def register(request: Request, user_in: UserCreate, db: Session = Depends(get_db)):
     """
     Create new user.
     """
@@ -41,7 +46,8 @@ def register(user_in: UserCreate, db: Session = Depends(get_db)):
     return db_user
 
 @router.post("/login", response_model=Token)
-def login(db: Session = Depends(get_db), form_data: OAuth2PasswordRequestForm = Depends()):
+@limiter.limit("10/minute")
+def login(request: Request, db: Session = Depends(get_db), form_data: OAuth2PasswordRequestForm = Depends()):
     """
     OAuth2 compatible token login, get an access token for future requests.
     """
@@ -65,7 +71,8 @@ def login(db: Session = Depends(get_db), form_data: OAuth2PasswordRequestForm = 
 
 
 @router.post("/forgot-password")
-async def forgot_password(body: ForgotPasswordRequest, db: Session = Depends(get_db)):
+@limiter.limit("3/minute")
+async def forgot_password(request: Request, body: ForgotPasswordRequest, db: Session = Depends(get_db)):
     """
     Request a password reset. If the email exists, a reset link is sent (when SMTP is configured).
     Always returns the same message to avoid revealing whether the email is registered.
@@ -91,8 +98,8 @@ async def forgot_password(body: ForgotPasswordRequest, db: Session = Depends(get
             payload={"subject": "Reset your password"},
         )
     else:
-        # Dev: log link so you can test without email
-        print(f"DEBUG Password reset link for {user.email}: {reset_link}")
+        # Dev only: log at DEBUG so it never appears in production logs (set LOG_LEVEL=INFO in prod)
+        logger.debug("Password reset link for %s: %s", user.email, reset_link)
 
     return {"message": "If that email is registered, you will receive a password reset link."}
 

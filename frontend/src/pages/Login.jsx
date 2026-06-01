@@ -143,12 +143,6 @@ const Login = () => {
                     >
                         {loading ? 'Signing in...' : 'Sign In'}
                     </button>
-
-                    <p style={{ textAlign: 'center', marginTop: '0.5rem', marginBottom: 0 }}>
-                        <Link to="/forgot-password" style={{ fontSize: '0.95rem', color: '#60a5fa', textDecoration: 'underline', fontWeight: 500 }}>
-                            Forgot password?
-                        </Link>
-                    </p>
                 </form>
 
                 <p style={{ textAlign: 'center', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, Link } from 'react-router-dom';
 import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
 import Tenants from './pages/Tenants';
@@ -11,16 +11,27 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
+import ErrorBoundary from './components/ErrorBoundary';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
 const ProtectedRoute = ({ children }) => {
   const { token, loading } = useAuth();
 
-  if (loading) return null; // Or a loader
+  if (loading) return null;
   if (!token) return <Navigate to="/login" replace />;
 
-  return <Layout>{children}</Layout>;
+  return <Layout><ErrorBoundary>{children}</ErrorBoundary></Layout>;
 };
+
+const NotFound = () => (
+  <div style={{ padding: '4rem', textAlign: 'center' }}>
+    <h1>404 — Page Not Found</h1>
+    <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>
+      The page you are looking for does not exist.
+    </p>
+    <Link to="/" className="btn btn-primary">Go to Dashboard</Link>
+  </div>
+);
 
 function App() {
   return (
@@ -39,7 +50,7 @@ function App() {
           <Route path="/payments" element={<ProtectedRoute><Payments /></ProtectedRoute>} />
           <Route path="/expenses" element={<ProtectedRoute><Expenses /></ProtectedRoute>} />
 
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="*" element={<ProtectedRoute><NotFound /></ProtectedRoute>} />
         </Routes>
       </AuthProvider>
     </Router>

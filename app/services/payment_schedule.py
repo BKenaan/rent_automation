@@ -1,3 +1,4 @@
+import calendar
 from datetime import date, timedelta
 from typing import List
 from sqlalchemy.orm import Session
@@ -37,8 +38,7 @@ class PaymentScheduleService:
             try:
                 current_due_date = current_due_date.replace(year=year, month=month)
             except ValueError:
-                # Handle cases where day doesn't exist (e.g., Jan 31 -> Feb 28)
-                last_day = 28 # Simplified
+                last_day = calendar.monthrange(year, month)[1]
                 current_due_date = current_due_date.replace(year=year, month=month, day=last_day)
                 
         return schedules

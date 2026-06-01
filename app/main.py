@@ -1,20 +1,20 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from contextlib import asynccontextmanager
 from app.core.config import settings
 from app.api import tenants, units, leases, payments, expenses, statements, auth, scheduler as scheduler_api
 from app.core.scheduler import setup_scheduler, shutdown_scheduler
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from app.core.limiter import limiter
+import os
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup: Setup scheduler
     setup_scheduler()
     yield
-    # Shutdown: Stop scheduler
     shutdown_scheduler()
-
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
-import os
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -22,13 +22,18 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# Add CORS middleware
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+# Scope CORS to exact allowed origins only
+_cors_origins = [o.strip() for o in settings.CORS_ALLOWED_ORIGINS.split(",") if o.strip()]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # For development; refine for production
+    allow_origins=_cors_origins,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH"],
+    allow_headers=["Content-Type", "Authorization"],
 )
 
 @app.middleware("http")

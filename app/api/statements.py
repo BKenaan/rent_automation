@@ -16,14 +16,22 @@ from app.models.user import User as UserModel
 router = APIRouter(prefix="/statements", tags=["statements"])
 
 def _build_statement(tenant: TenantModel, db: Session) -> TenantStatement:
-    leases = db.query(LeaseModel).filter(LeaseModel.tenant_id == tenant.id).all()
+    leases = (
+        db.query(LeaseModel)
+        .options(
+            joinedload(LeaseModel.unit),
+            joinedload(LeaseModel.payment_schedules),
+        )
+        .filter(LeaseModel.tenant_id == tenant.id)
+        .all()
+    )
     total_due = 0.0
     total_paid = 0.0
     transactions = []
     unit_names = []
     for lease in leases:
         unit_names.append(lease.unit.name)
-        schedules = db.query(PaymentScheduleModel).filter(PaymentScheduleModel.lease_id == lease.id).order_by(PaymentScheduleModel.due_date.asc()).all()
+        schedules = sorted(lease.payment_schedules, key=lambda s: s.due_date)
         for s in schedules:
             total_due += float(s.amount)
             if s.status == "paid":

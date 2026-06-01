@@ -16,12 +16,25 @@ const Register = () => {
     const { register, login, logout } = useAuth();
     const navigate = useNavigate();
 
+    const validatePassword = (pwd) => {
+        if (pwd.length < 8) return 'Password must be at least 8 characters';
+        if (!/[A-Z]/.test(pwd)) return 'Password must contain at least one uppercase letter';
+        if (!/\d/.test(pwd)) return 'Password must contain at least one digit';
+        return null;
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
 
         if (formData.password !== formData.confirmPassword) {
             setError('Passwords do not match');
+            return;
+        }
+
+        const pwdError = validatePassword(formData.password);
+        if (pwdError) {
+            setError(pwdError);
             return;
         }
 
