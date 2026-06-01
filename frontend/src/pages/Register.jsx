@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { AlertCircle, ShieldCheck } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
+import Logo from '../components/Logo';
 
 const validatePassword = (pwd) => {
-    if (pwd.length < 8)        return 'Password must be at least 8 characters';
-    if (!/[A-Z]/.test(pwd))    return 'Password must contain at least one uppercase letter';
-    if (!/\d/.test(pwd))       return 'Password must contain at least one digit';
+    if (pwd.length < 8)     return 'Password must be at least 8 characters';
+    if (!/[A-Z]/.test(pwd)) return 'Password must contain at least one uppercase letter';
+    if (!/\d/.test(pwd))    return 'Password must contain at least one digit';
     return null;
 };
 
@@ -22,37 +23,28 @@ const Register = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
-
-        if (formData.password !== formData.confirmPassword) {
-            setError('Passwords do not match');
-            return;
-        }
+        if (formData.password !== formData.confirmPassword) { setError('Passwords do not match'); return; }
         const pwdErr = validatePassword(formData.password);
         if (pwdErr) { setError(pwdErr); return; }
-
         setLoading(true);
         try {
             logout();
             await register({ username: formData.username, email: formData.email, full_name: formData.full_name, password: formData.password });
             await login(formData.username, formData.password);
-            navigate('/');
+            navigate('/dashboard');
         } catch (err) {
             setError(err.response?.data?.detail || 'Registration failed. Please try again.');
-        } finally {
-            setLoading(false);
-        }
+        } finally { setLoading(false); }
     };
 
     return (
         <div className="auth-page">
             <div className="auth-card auth-card-wide">
                 <div className="auth-header">
-                    <div className="auth-icon">
-                        <ShieldCheck size={24} />
-                    </div>
+                    <Logo size={44} />
                     <div>
-                        <h1>Create account</h1>
-                        <p>Get started with property management</p>
+                        <h1>Create your account</h1>
+                        <p>Start managing your rental portfolio with RentalMan</p>
                     </div>
                 </div>
 
@@ -74,30 +66,28 @@ const Register = () => {
                             <input type="text" required className="form-input" placeholder="John Smith" value={formData.full_name} onChange={handle('full_name')} autoComplete="name" />
                         </div>
                     </div>
-
                     <div className="form-group">
                         <label className="form-label">Email</label>
                         <input type="email" required className="form-input" placeholder="you@example.com" value={formData.email} onChange={handle('email')} autoComplete="email" />
                     </div>
-
                     <div className="form-row">
                         <div className="form-group">
                             <label className="form-label">Password</label>
                             <input type="password" required className="form-input" placeholder="Min 8 chars, 1 uppercase, 1 digit" value={formData.password} onChange={handle('password')} autoComplete="new-password" />
                         </div>
                         <div className="form-group">
-                            <label className="form-label">Confirm password</label>
+                            <label className="form-label">Confirm Password</label>
                             <input type="password" required className="form-input" placeholder="••••••••" value={formData.confirmPassword} onChange={handle('confirmPassword')} autoComplete="new-password" />
                         </div>
                     </div>
-
                     <button type="submit" className="btn btn-primary btn-lg w-full" disabled={loading} style={{ marginTop: 4 }}>
                         {loading ? 'Creating account…' : 'Create account'}
                     </button>
                 </form>
 
-                <p className="auth-footer">
-                    Already have an account? <Link to="/login">Sign in</Link>
+                <p className="auth-footer">Already have an account? <Link to="/login">Sign in</Link></p>
+                <p className="auth-footer" style={{ marginTop: -12 }}>
+                    <Link to="/" style={{ color: 'var(--text-3)', fontSize: '0.8rem', textDecoration: 'none' }}>← Back to home</Link>
                 </p>
             </div>
         </div>

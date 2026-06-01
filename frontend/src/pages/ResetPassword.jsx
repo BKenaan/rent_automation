@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { authApi } from '../api';
-import { Lock, AlertCircle, KeyRound, CheckCircle } from 'lucide-react';
+import { Lock, AlertCircle, CheckCircle } from 'lucide-react';
+import Logo from '../components/Logo';
 
 const ResetPassword = () => {
     const [searchParams] = useSearchParams();
@@ -26,21 +27,22 @@ const ResetPassword = () => {
             setTimeout(() => navigate('/login'), 3000);
         } catch (err) {
             setError(err.response?.data?.detail || 'Failed to reset password. The link may have expired.');
-        } finally {
-            setLoading(false);
-        }
+        } finally { setLoading(false); }
     };
 
     if (!token && !success) {
         return (
             <div className="auth-page">
-                <div className="auth-card" style={{ textAlign: 'center' }}>
-                    <KeyRound size={40} className="text-muted" style={{ margin: '0 auto 12px' }} />
-                    <h1 style={{ marginBottom: 8 }}>Invalid reset link</h1>
-                    <p className="text-2" style={{ marginBottom: 24 }}>This link is missing or invalid.</p>
-                    <Link to="/forgot-password" className="btn btn-primary btn-lg" style={{ display: 'inline-flex' }}>
+                <div className="auth-card" style={{ textAlign: 'center', gap: 20 }}>
+                    <Logo size={44} />
+                    <div>
+                        <h1 style={{ marginBottom: 8 }}>Invalid reset link</h1>
+                        <p className="text-2">This link is missing or invalid.</p>
+                    </div>
+                    <Link to="/forgot-password" className="btn btn-primary btn-lg" style={{ justifyContent: 'center' }}>
                         Request new link
                     </Link>
+                    <p className="auth-footer"><Link to="/login">Back to sign in</Link></p>
                 </div>
             </div>
         );
@@ -50,12 +52,10 @@ const ResetPassword = () => {
         <div className="auth-page">
             <div className="auth-card">
                 <div className="auth-header">
-                    <div className="auth-icon">
-                        <KeyRound size={24} />
-                    </div>
+                    <Logo size={44} />
                     <div>
                         <h1>Set new password</h1>
-                        <p>Enter your new password below</p>
+                        <p>Enter your new RentalMan password below</p>
                     </div>
                 </div>
 
@@ -94,9 +94,7 @@ const ResetPassword = () => {
                     </>
                 )}
 
-                <p className="auth-footer">
-                    <Link to="/login">Back to sign in</Link>
-                </p>
+                <p className="auth-footer"><Link to="/login">Back to sign in</Link></p>
             </div>
         </div>
     );

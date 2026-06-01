@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 
 const Layout = ({ children }) => {
     const { logout, username } = useAuth();
-    const initials = username ? username.slice(0, 2).toUpperCase() : 'U';
+    const initials = username ? username.slice(0, 2).toUpperCase() : 'RM';
 
     return (
         <div className="app-shell">
@@ -14,12 +14,12 @@ const Layout = ({ children }) => {
                 <header className="topbar">
                     <div className="topbar-user">
                         <div className="topbar-avatar">{initials}</div>
-                        <span>{username || 'User'}</span>
+                        <span>{username || 'Account'}</span>
                     </div>
                     <button
                         className="btn btn-ghost btn-icon"
                         onClick={logout}
-                        title="Sign out"
+                        title="Sign out of RentalMan"
                         style={{ color: 'var(--red)' }}
                     >
                         <LogOut size={17} />

@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, Link } from 'react-router-dom';
 import Layout from './components/Layout';
+import Landing from './pages/Landing';
 import Dashboard from './pages/Dashboard';
 import Tenants from './pages/Tenants';
 import Units from './pages/Units';
@@ -15,21 +16,22 @@ import ErrorBoundary from './components/ErrorBoundary';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
 const ProtectedRoute = ({ children }) => {
-  const { token, loading } = useAuth();
-
-  if (loading) return null;
+  const { token } = useAuth();
   if (!token) return <Navigate to="/login" replace />;
-
   return <Layout><ErrorBoundary>{children}</ErrorBoundary></Layout>;
+};
+
+const PublicRoute = ({ children }) => {
+  const { token } = useAuth();
+  if (token) return <Navigate to="/dashboard" replace />;
+  return children;
 };
 
 const NotFound = () => (
   <div style={{ padding: '4rem', textAlign: 'center' }}>
-    <h1>404 — Page Not Found</h1>
-    <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>
-      The page you are looking for does not exist.
-    </p>
-    <Link to="/" className="btn btn-primary">Go to Dashboard</Link>
+    <h1 style={{ marginBottom: 12 }}>404 — Page Not Found</h1>
+    <p style={{ color: 'var(--text-2)', marginBottom: 28 }}>The page you are looking for does not exist.</p>
+    <Link to="/dashboard" className="btn btn-primary">Go to Dashboard</Link>
   </div>
 );
 
@@ -38,17 +40,22 @@ function App() {
     <Router>
       <AuthProvider>
         <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
+          {/* Public landing */}
+          <Route path="/" element={<Landing />} />
 
-          <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-          <Route path="/tenants" element={<ProtectedRoute><Tenants /></ProtectedRoute>} />
-          <Route path="/units" element={<ProtectedRoute><Units /></ProtectedRoute>} />
-          <Route path="/leases" element={<ProtectedRoute><Leases /></ProtectedRoute>} />
-          <Route path="/payments" element={<ProtectedRoute><Payments /></ProtectedRoute>} />
-          <Route path="/expenses" element={<ProtectedRoute><Expenses /></ProtectedRoute>} />
+          {/* Auth pages — redirect to dashboard if already logged in */}
+          <Route path="/login"          element={<PublicRoute><Login /></PublicRoute>} />
+          <Route path="/register"       element={<PublicRoute><Register /></PublicRoute>} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password"  element={<ResetPassword />} />
+
+          {/* Protected app pages */}
+          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/tenants"   element={<ProtectedRoute><Tenants /></ProtectedRoute>} />
+          <Route path="/units"     element={<ProtectedRoute><Units /></ProtectedRoute>} />
+          <Route path="/leases"    element={<ProtectedRoute><Leases /></ProtectedRoute>} />
+          <Route path="/payments"  element={<ProtectedRoute><Payments /></ProtectedRoute>} />
+          <Route path="/expenses"  element={<ProtectedRoute><Expenses /></ProtectedRoute>} />
 
           <Route path="*" element={<ProtectedRoute><NotFound /></ProtectedRoute>} />
         </Routes>

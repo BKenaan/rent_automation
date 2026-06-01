@@ -7,11 +7,11 @@ import {
     FileText,
     CreditCard,
     Receipt,
-    Building,
 } from 'lucide-react';
+import Logo from './Logo';
 
 const nav = [
-    { icon: LayoutDashboard, label: 'Dashboard',  path: '/' },
+    { icon: LayoutDashboard, label: 'Dashboard',  path: '/dashboard' },
     { icon: Users,           label: 'Tenants',    path: '/tenants' },
     { icon: Building2,       label: 'Units',      path: '/units' },
     { icon: FileText,        label: 'Leases',     path: '/leases' },
@@ -22,20 +22,16 @@ const nav = [
 const Sidebar = () => (
     <aside className="sidebar">
         <div className="sidebar-logo">
-            <div className="sidebar-logo-icon">
-                <Building size={18} color="white" />
-            </div>
-            <span className="sidebar-logo-name">RentFlow</span>
+            <Logo size={30} showName nameSize="1rem" />
         </div>
 
-        <span className="sidebar-section-label">Menu</span>
+        <span className="sidebar-section-label">Navigation</span>
 
         <nav className="sidebar-nav">
             {nav.map(({ icon: Icon, label, path }) => (
                 <NavLink
                     key={path}
                     to={path}
-                    end={path === '/'}
                     className={({ isActive }) => `sidebar-link${isActive ? ' active' : ''}`}
                 >
                     <Icon size={17} />

@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Lock, User, AlertCircle, Building } from 'lucide-react';
+import { Lock, User, AlertCircle } from 'lucide-react';
+import Logo from '../components/Logo';
 
 const Login = () => {
     const [username, setUsername] = useState('');
-    const [password, setPassword]  = useState('');
-    const [error, setError]         = useState('');
-    const [loading, setLoading]     = useState(false);
+    const [password, setPassword] = useState('');
+    const [error, setError]       = useState('');
+    const [loading, setLoading]   = useState(false);
     const { login } = useAuth();
     const navigate  = useNavigate();
 
@@ -17,7 +18,7 @@ const Login = () => {
         setLoading(true);
         try {
             await login(username, password);
-            navigate('/');
+            navigate('/dashboard');
         } catch (err) {
             setError(err.response?.data?.detail || 'Invalid username or password');
         } finally {
@@ -29,12 +30,10 @@ const Login = () => {
         <div className="auth-page">
             <div className="auth-card">
                 <div className="auth-header">
-                    <div className="auth-icon">
-                        <Building size={24} />
-                    </div>
+                    <Logo size={44} />
                     <div>
                         <h1>Welcome back</h1>
-                        <p>Sign in to manage your properties</p>
+                        <p>Sign in to your RentalMan account</p>
                     </div>
                 </div>
 
@@ -50,15 +49,7 @@ const Login = () => {
                         <label className="form-label">Username</label>
                         <div className="input-icon-wrap">
                             <User size={15} className="input-icon" />
-                            <input
-                                type="text"
-                                required
-                                className="form-input"
-                                placeholder="your username"
-                                value={username}
-                                onChange={(e) => setUsername(e.target.value)}
-                                autoComplete="username"
-                            />
+                            <input type="text" required className="form-input" placeholder="your username" value={username} onChange={(e) => setUsername(e.target.value)} autoComplete="username" />
                         </div>
                     </div>
 
@@ -71,15 +62,7 @@ const Login = () => {
                         </div>
                         <div className="input-icon-wrap">
                             <Lock size={15} className="input-icon" />
-                            <input
-                                type="password"
-                                required
-                                className="form-input"
-                                placeholder="••••••••"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                autoComplete="current-password"
-                            />
+                            <input type="password" required className="form-input" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" />
                         </div>
                     </div>
 
@@ -89,8 +72,10 @@ const Login = () => {
                 </form>
 
                 <p className="auth-footer">
-                    Don't have an account?{' '}
-                    <Link to="/register">Create account</Link>
+                    Don't have an account? <Link to="/register">Create account</Link>
+                </p>
+                <p className="auth-footer" style={{ marginTop: -12 }}>
+                    <Link to="/" style={{ color: 'var(--text-3)', fontSize: '0.8rem', textDecoration: 'none' }}>← Back to home</Link>
                 </p>
             </div>
         </div>
