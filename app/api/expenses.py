@@ -1,46 +1,63 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+import logging
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from app.db.session import get_db
 from app.models.expense import Expense as ExpenseModel
 from app.schemas.expense import Expense, ExpenseCreate, ExpenseUpdate
-
 from app.api.deps import get_current_user
 from app.models.user import User as UserModel
 from app.models.unit import Unit as UnitModel
 
+logger = logging.getLogger(__name__)
+
 router = APIRouter(prefix="/expenses", tags=["expenses"])
+
 
 @router.post("/", response_model=Expense, status_code=status.HTTP_201_CREATED)
 def create_expense(
     expense: ExpenseCreate,
     db: Session = Depends(get_db),
-    current_user: UserModel = Depends(get_current_user)
+    current_user: UserModel = Depends(get_current_user),
 ):
-    unit = db.query(UnitModel).filter(UnitModel.id == expense.unit_id, UnitModel.user_id == current_user.id).first()
+    unit = db.query(UnitModel).filter(
+        UnitModel.id == expense.unit_id, UnitModel.user_id == current_user.id
+    ).first()
     if not unit:
         raise HTTPException(status_code=404, detail="Unit not found or not owned by you")
     db_expense = ExpenseModel(**expense.model_dump())
     db.add(db_expense)
     db.commit()
     db.refresh(db_expense)
+    logger.info("Expense created: %s (user %s)", db_expense.id, current_user.id)
     return db_expense
+
 
 @router.get("/", response_model=List[Expense])
 def read_expenses(
-    skip: int = 0,
-    limit: int = 100,
+    skip: int = Query(default=0, ge=0),
+    limit: int = Query(default=50, ge=1, le=200),
     unit_id: Optional[int] = None,
     db: Session = Depends(get_db),
-    current_user: UserModel = Depends(get_current_user)
+    current_user: UserModel = Depends(get_current_user),
 ):
-    query = db.query(ExpenseModel).join(UnitModel).filter(UnitModel.user_id == current_user.id)
+    """List expenses. Optionally filter by unit_id. Use skip/limit for pagination."""
+    query = (
+        db.query(ExpenseModel)
+        .join(UnitModel)
+        .filter(UnitModel.user_id == current_user.id)
+    )
     if unit_id:
         query = query.filter(ExpenseModel.unit_id == unit_id)
-    return query.offset(skip).limit(limit).all()
+    return query.order_by(ExpenseModel.date.desc()).offset(skip).limit(limit).all()
+
 
 @router.get("/{expense_id}", response_model=Expense)
-def read_expense(expense_id: int, db: Session = Depends(get_db), current_user: UserModel = Depends(get_current_user)):
+def read_expense(
+    expense_id: int,
+    db: Session = Depends(get_db),
+    current_user: UserModel = Depends(get_current_user),
+):
     db_expense = db.query(ExpenseModel).join(UnitModel).filter(
         ExpenseModel.id == expense_id, UnitModel.user_id == current_user.id
     ).first()
@@ -48,22 +65,32 @@ def read_expense(expense_id: int, db: Session = Depends(get_db), current_user: U
         raise HTTPException(status_code=404, detail="Expense not found")
     return db_expense
 
+
 @router.put("/{expense_id}", response_model=Expense)
-def update_expense(expense_id: int, expense: ExpenseUpdate, db: Session = Depends(get_db), current_user: UserModel = Depends(get_current_user)):
+def update_expense(
+    expense_id: int,
+    expense: ExpenseUpdate,
+    db: Session = Depends(get_db),
+    current_user: UserModel = Depends(get_current_user),
+):
     db_expense = db.query(ExpenseModel).join(UnitModel).filter(
         ExpenseModel.id == expense_id, UnitModel.user_id == current_user.id
     ).first()
     if db_expense is None:
         raise HTTPException(status_code=404, detail="Expense not found")
-    update_data = expense.model_dump(exclude_unset=True)
-    for key, value in update_data.items():
+    for key, value in expense.model_dump(exclude_unset=True).items():
         setattr(db_expense, key, value)
     db.commit()
     db.refresh(db_expense)
     return db_expense
 
+
 @router.delete("/{expense_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_expense(expense_id: int, db: Session = Depends(get_db), current_user: UserModel = Depends(get_current_user)):
+def delete_expense(
+    expense_id: int,
+    db: Session = Depends(get_db),
+    current_user: UserModel = Depends(get_current_user),
+):
     db_expense = db.query(ExpenseModel).join(UnitModel).filter(
         ExpenseModel.id == expense_id, UnitModel.user_id == current_user.id
     ).first()
@@ -71,4 +98,5 @@ def delete_expense(expense_id: int, db: Session = Depends(get_db), current_user:
         raise HTTPException(status_code=404, detail="Expense not found")
     db.delete(db_expense)
     db.commit()
+    logger.info("Expense deleted: %s (user %s)", expense_id, current_user.id)
     return None

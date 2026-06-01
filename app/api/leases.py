@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+import logging
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 from typing import List
 from app.db.session import get_db
@@ -6,11 +7,12 @@ from app.models.lease import Lease as LeaseModel
 from app.schemas.lease import Lease, LeaseCreate, LeaseUpdate
 from app.services.payment_schedule import schedule_service
 from app.models.payment_schedule import PaymentSchedule
-
 from app.api.deps import get_current_user
 from app.models.user import User as UserModel
 from app.models.tenant import Tenant as TenantModel
 from app.models.unit import Unit as UnitModel
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/leases", tags=["leases"])
 
@@ -20,70 +22,110 @@ def _lease_belongs_to_user(db: Session, lease_id: int, user_id: int) -> LeaseMod
         LeaseModel.id == lease_id, TenantModel.user_id == user_id
     ).first()
 
+
 @router.post("/", response_model=Lease, status_code=status.HTTP_201_CREATED)
 def create_lease(
     lease: LeaseCreate,
     db: Session = Depends(get_db),
-    current_user: UserModel = Depends(get_current_user)
+    current_user: UserModel = Depends(get_current_user),
 ):
-    tenant = db.query(TenantModel).filter(TenantModel.id == lease.tenant_id, TenantModel.user_id == current_user.id).first()
-    unit = db.query(UnitModel).filter(UnitModel.id == lease.unit_id, UnitModel.user_id == current_user.id).first()
+    tenant = db.query(TenantModel).filter(
+        TenantModel.id == lease.tenant_id, TenantModel.user_id == current_user.id
+    ).first()
+    unit = db.query(UnitModel).filter(
+        UnitModel.id == lease.unit_id, UnitModel.user_id == current_user.id
+    ).first()
     if not tenant or not unit:
         raise HTTPException(status_code=404, detail="Tenant or unit not found or not owned by you")
+
     db_lease = LeaseModel(**lease.model_dump())
     db.add(db_lease)
     db.commit()
     db.refresh(db_lease)
+
     schedules = schedule_service.generate_schedules(db_lease)
     db.add_all(schedules)
     db.commit()
     db.refresh(db_lease)
+    logger.info("Lease created: %s (user %s), %d schedules", db_lease.id, current_user.id, len(schedules))
     return db_lease
+
 
 @router.get("/", response_model=List[Lease])
 def read_leases(
-    skip: int = 0,
-    limit: int = 100,
+    skip: int = Query(default=0, ge=0),
+    limit: int = Query(default=50, ge=1, le=200),
     db: Session = Depends(get_db),
-    current_user: UserModel = Depends(get_current_user)
+    current_user: UserModel = Depends(get_current_user),
 ):
-    leases = db.query(LeaseModel).join(TenantModel).filter(
-        TenantModel.user_id == current_user.id
-    ).offset(skip).limit(limit).all()
-    return leases
+    """List leases. Use skip/limit for pagination (default 50, max 200)."""
+    return (
+        db.query(LeaseModel)
+        .join(TenantModel)
+        .filter(TenantModel.user_id == current_user.id)
+        .order_by(LeaseModel.start_date.desc())
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
+
 
 @router.get("/{lease_id}", response_model=Lease)
-def read_lease(lease_id: int, db: Session = Depends(get_db), current_user: UserModel = Depends(get_current_user)):
+def read_lease(
+    lease_id: int,
+    db: Session = Depends(get_db),
+    current_user: UserModel = Depends(get_current_user),
+):
     db_lease = _lease_belongs_to_user(db, lease_id, current_user.id)
     if db_lease is None:
         raise HTTPException(status_code=404, detail="Lease not found")
     return db_lease
 
+
 @router.put("/{lease_id}", response_model=Lease)
-def update_lease(lease_id: int, lease: LeaseUpdate, db: Session = Depends(get_db), current_user: UserModel = Depends(get_current_user)):
+def update_lease(
+    lease_id: int,
+    lease: LeaseUpdate,
+    db: Session = Depends(get_db),
+    current_user: UserModel = Depends(get_current_user),
+):
     db_lease = _lease_belongs_to_user(db, lease_id, current_user.id)
     if db_lease is None:
         raise HTTPException(status_code=404, detail="Lease not found")
+
     update_data = lease.model_dump(exclude_unset=True)
     for key, value in update_data.items():
         setattr(db_lease, key, value)
     db.commit()
+
     if any(k in update_data for k in ["rent_amount", "start_date", "end_date", "payment_frequency_months"]):
         schedule_service.regenerate_schedules(db, db_lease)
+
     db.refresh(db_lease)
     return db_lease
 
+
 @router.delete("/{lease_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_lease(lease_id: int, db: Session = Depends(get_db), current_user: UserModel = Depends(get_current_user)):
+def delete_lease(
+    lease_id: int,
+    db: Session = Depends(get_db),
+    current_user: UserModel = Depends(get_current_user),
+):
     db_lease = _lease_belongs_to_user(db, lease_id, current_user.id)
     if db_lease is None:
         raise HTTPException(status_code=404, detail="Lease not found")
     db.delete(db_lease)
     db.commit()
+    logger.info("Lease deleted: %s (user %s)", lease_id, current_user.id)
     return None
 
+
 @router.post("/{lease_id}/regenerate-schedules", response_model=Lease)
-def manual_regenerate_schedules(lease_id: int, db: Session = Depends(get_db), current_user: UserModel = Depends(get_current_user)):
+def manual_regenerate_schedules(
+    lease_id: int,
+    db: Session = Depends(get_db),
+    current_user: UserModel = Depends(get_current_user),
+):
     db_lease = _lease_belongs_to_user(db, lease_id, current_user.id)
     if db_lease is None:
         raise HTTPException(status_code=404, detail="Lease not found")
