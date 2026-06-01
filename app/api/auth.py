@@ -51,7 +51,13 @@ def login(request: Request, db: Session = Depends(get_db), form_data: OAuth2Pass
     """
     OAuth2 compatible token login, get an access token for future requests.
     """
-    user = db.query(UserModel).filter(UserModel.username == form_data.username).first()
+    # Accept either username or email in the username field
+    login_input = form_data.username.strip()
+    if "@" in login_input:
+        user = db.query(UserModel).filter(UserModel.email == login_input).first()
+    else:
+        user = db.query(UserModel).filter(UserModel.username == login_input).first()
+
     if not user or not security.verify_password(form_data.password, user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

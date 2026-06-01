@@ -46,10 +46,10 @@ const Login = () => {
 
                 <form className="form-stack" onSubmit={handleSubmit}>
                     <div className="form-group">
-                        <label className="form-label">Username</label>
+                        <label className="form-label">Username or Email</label>
                         <div className="input-icon-wrap">
                             <User size={15} className="input-icon" />
-                            <input type="text" required className="form-input" placeholder="your username" value={username} onChange={(e) => setUsername(e.target.value)} autoComplete="username" />
+                            <input type="text" required className="form-input" placeholder="username or email address" value={username} onChange={(e) => setUsername(e.target.value)} autoComplete="username" />
                         </div>
                     </div>
 
