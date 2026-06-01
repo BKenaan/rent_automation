@@ -32,6 +32,10 @@ def upgrade() -> None:
     if first_user_id is not None:
         conn.execute(sa.text("UPDATE tenants SET user_id = :uid"), {"uid": first_user_id})
         conn.execute(sa.text("UPDATE units SET user_id = :uid"), {"uid": first_user_id})
+    
+    # Clean up test data: delete any records that still don't have a user_id
+    conn.execute(sa.text("DELETE FROM tenants WHERE user_id IS NULL"))
+    conn.execute(sa.text("DELETE FROM units WHERE user_id IS NULL"))
 
     # Now set NOT NULL and add FK
     op.alter_column(
