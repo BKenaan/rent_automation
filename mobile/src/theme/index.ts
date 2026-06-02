@@ -1,10 +1,12 @@
-// Inter font family — weight is baked into each family name (avoids faux-bold)
+// Inter for UI text; Space Grotesk as the distinctive brand display face
 export const fonts = {
   regular:  'Inter_400Regular',
   medium:   'Inter_500Medium',
   semibold: 'Inter_600SemiBold',
   bold:     'Inter_700Bold',
   extrabold:'Inter_800ExtraBold',
+  display:  'SpaceGrotesk_700Bold',
+  displayMed:'SpaceGrotesk_500Medium',
 };
 
 export const colors = {

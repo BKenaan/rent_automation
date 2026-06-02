@@ -11,7 +11,7 @@ const NAVY = '#1B2B4E';
  * holds briefly, then fades out to reveal the app.
  */
 export default function AnimatedSplash({ onDone }: { onDone: () => void }) {
-  const logoScale = useRef(new Animated.Value(0.94)).current;
+  const logoScale = useRef(new Animated.Value(0.88)).current;
   const wordOpacity = useRef(new Animated.Value(0)).current;
   const wordShift = useRef(new Animated.Value(10)).current;
   const screenOpacity = useRef(new Animated.Value(1)).current;
@@ -19,17 +19,18 @@ export default function AnimatedSplash({ onDone }: { onDone: () => void }) {
   useEffect(() => {
     Animated.sequence([
       Animated.parallel([
-        Animated.spring(logoScale, { toValue: 1, friction: 6, tension: 50, useNativeDriver: true }),
+        // gentle, slow settle of the logo (no bounce — feels intentional)
+        Animated.timing(logoScale, { toValue: 1, duration: 900, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
         Animated.sequence([
-          Animated.delay(180),
+          Animated.delay(450),
           Animated.parallel([
-            Animated.timing(wordOpacity, { toValue: 1, duration: 380, useNativeDriver: true }),
-            Animated.timing(wordShift, { toValue: 0, duration: 380, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+            Animated.timing(wordOpacity, { toValue: 1, duration: 700, useNativeDriver: true }),
+            Animated.timing(wordShift, { toValue: 0, duration: 700, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
           ]),
         ]),
       ]),
-      Animated.delay(850),
-      Animated.timing(screenOpacity, { toValue: 0, duration: 420, easing: Easing.in(Easing.ease), useNativeDriver: true }),
+      Animated.delay(1500),
+      Animated.timing(screenOpacity, { toValue: 0, duration: 600, easing: Easing.in(Easing.ease), useNativeDriver: true }),
     ]).start(() => onDone());
   }, [logoScale, wordOpacity, wordShift, screenOpacity, onDone]);
 
@@ -50,6 +51,6 @@ export default function AnimatedSplash({ onDone }: { onDone: () => void }) {
 
 const styles = StyleSheet.create({
   wrap: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: NAVY, alignItems: 'center', justifyContent: 'center' },
-  name: { color: '#fff', fontSize: 30, fontFamily: fonts.extrabold, marginTop: 22, letterSpacing: -0.5 },
-  tag:  { color: 'rgba(255,255,255,0.6)', fontSize: 13, fontFamily: fonts.regular, marginTop: 7 },
+  name: { color: '#fff', fontSize: 32, fontFamily: fonts.display, marginTop: 24, letterSpacing: 0.5 },
+  tag:  { color: 'rgba(255,255,255,0.55)', fontSize: 13, fontFamily: fonts.medium, marginTop: 9, letterSpacing: 0.3 },
 });
