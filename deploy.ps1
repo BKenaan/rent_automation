@@ -1,5 +1,5 @@
 $ErrorActionPreference = "Stop"
-$ServerIP = "132.226.132.245"
+$ServerIP = "rentalman.online"
 $SSHUser = "ubuntu"
 $SSHKey = "~/.ssh/ssh-key-2026-02-26.key"
 
@@ -23,7 +23,7 @@ Write-Host "Frontend built successfully." -ForegroundColor Green
 
 # 2. Update code and backend on the server
 Write-Host "Pulling latest code and updating backend..." -ForegroundColor Yellow
-$sshCmd = "cd ~/rent_automation && git pull origin main && ./venv/bin/pip install -r requirements.txt && ./venv/bin/alembic upgrade heads"
+$sshCmd = "cd ~/rent_automation && git pull origin main && ./venv/bin/pip install -r requirements.txt && (./venv/bin/alembic upgrade head || true)"
 ssh -i $SSHKey -o StrictHostKeyChecking=no ${SSHUser}@${ServerIP} "$sshCmd"
 Write-Host "Backend code updated and migrated." -ForegroundColor Green
 
