@@ -19,6 +19,7 @@ const Tenants = () => {
 
     const [isStatementOpen, setIsStatementOpen] = useState(false);
     const [statementData, setStatementData]     = useState(null);
+    const [statementTenantId, setStatementTenantId] = useState(null);
     const [statementLoading, setStatementLoading] = useState(false);
 
     const fetchAll = async () => {
@@ -74,6 +75,7 @@ const Tenants = () => {
         setStatementLoading(true);
         setIsStatementOpen(true);
         setStatementData(null);
+        setStatementTenantId(id);
         try {
             const res = await statementsApi.getStatement(id);
             const d = res?.data;
@@ -155,7 +157,7 @@ const Tenants = () => {
                             </div>
                             <button
                                 className="btn btn-secondary"
-                                onClick={() => downloadPdf(tenants.find(t => t.full_name === statementData.tenant_name)?.id, statementData.tenant_name)}
+                                onClick={() => downloadPdf(statementTenantId, statementData.tenant_name)}
                             >
                                 <Download size={15} /> Export PDF
                             </button>

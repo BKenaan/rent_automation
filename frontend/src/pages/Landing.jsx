@@ -128,43 +128,74 @@ const HeroSection = () => (
                 ))}
             </div>
 
-            {/* Dashboard preview mockup */}
-            <div className="lp-mockup">
-                <div className="lp-mockup-bar">
-                    <span /><span /><span />
+            {/* Realistic dashboard preview */}
+            <DashboardPreview />
+        </div>
+    </section>
+);
+
+const PREVIEW_METRICS = [
+    { label: 'Gross Revenue',  value: '$48,250', accent: '#22c55e' },
+    { label: 'Operating Costs', value: '$12,400', accent: '#ef4444' },
+    { label: 'Net Income',      value: '$35,850', accent: '#a78bfa' },
+    { label: 'Portfolio ROI',   value: '14.2%',   accent: '#f59e0b' },
+];
+
+const PREVIEW_ROWS = [
+    { name: 'Sarah Khoury',   unit: 'Apt 4B · A102',  amount: '$1,450', status: 'Paid',    cls: 'paid' },
+    { name: 'James Okoye',    unit: 'Shop 1 · S001',  amount: '$2,200', status: 'Overdue', cls: 'overdue' },
+    { name: 'Mia Tanaka',     unit: 'Apt 7A · A210',  amount: '$1,300', status: 'Paid',    cls: 'paid' },
+    { name: 'David Romano',   unit: 'Apt 2C · A045',  amount: '$1,150', status: 'Pending', cls: 'pending' },
+];
+
+const PREVIEW_NAV = ['Dashboard', 'Tenants', 'Units', 'Payments', 'Expenses'];
+
+const DashboardPreview = () => (
+    <div className="lp-preview">
+        <div className="lp-preview-bar">
+            <span /><span /><span />
+            <div className="lp-preview-url">rentalman.online/dashboard</div>
+        </div>
+        <div className="lp-preview-body">
+            {/* Sidebar */}
+            <div className="lp-preview-side">
+                <div className="lp-preview-brand">
+                    <div className="lp-preview-brand-mark" />
+                    <span>RentalMan</span>
                 </div>
-                <div className="lp-mockup-body">
-                    <div className="lp-mockup-sidebar">
-                        <div className="lp-mockup-logo-row" />
-                        {[...Array(5)].map((_, i) => (
-                            <div key={i} className={`lp-mockup-nav-item ${i === 0 ? 'active' : ''}`} />
-                        ))}
-                    </div>
-                    <div className="lp-mockup-main">
-                        <div className="lp-mockup-cards">
-                            {['#8b5cf6', '#3b82f6', '#10b981', '#f59e0b'].map((c, i) => (
-                                <div key={i} className="lp-mockup-card">
-                                    <div className="lp-mockup-card-label" />
-                                    <div className="lp-mockup-card-value" style={{ background: c, opacity: 0.7 }} />
-                                </div>
-                            ))}
+                {PREVIEW_NAV.map((item, i) => (
+                    <div key={item} className={`lp-preview-nav ${i === 0 ? 'active' : ''}`}>{item}</div>
+                ))}
+            </div>
+
+            {/* Main */}
+            <div className="lp-preview-main">
+                <div className="lp-preview-title">Financial Overview</div>
+                <div className="lp-preview-metrics">
+                    {PREVIEW_METRICS.map(m => (
+                        <div key={m.label} className="lp-preview-metric">
+                            <div className="lp-preview-metric-label">{m.label}</div>
+                            <div className="lp-preview-metric-value" style={{ color: m.accent }}>{m.value}</div>
                         </div>
-                        <div className="lp-mockup-table">
-                            <div className="lp-mockup-table-header" />
-                            {[...Array(4)].map((_, i) => (
-                                <div key={i} className="lp-mockup-table-row">
-                                    <div className="lp-mockup-cell lp-mockup-cell-wide" />
-                                    <div className="lp-mockup-cell" />
-                                    <div className="lp-mockup-cell lp-mockup-cell-badge"
-                                        style={{ background: i === 1 ? 'rgba(239,68,68,0.2)' : 'rgba(34,197,94,0.2)', color: i === 1 ? '#ef4444' : '#22c55e' }} />
-                                </div>
-                            ))}
+                    ))}
+                </div>
+                <div className="lp-preview-card">
+                    <div className="lp-preview-card-head">Upcoming Payments</div>
+                    {PREVIEW_ROWS.map(r => (
+                        <div key={r.name} className="lp-preview-row">
+                            <div className="lp-preview-avatar">{r.name.charAt(0)}</div>
+                            <div className="lp-preview-row-info">
+                                <div className="lp-preview-row-name">{r.name}</div>
+                                <div className="lp-preview-row-unit">{r.unit}</div>
+                            </div>
+                            <div className="lp-preview-amount">{r.amount}</div>
+                            <div className={`lp-preview-badge ${r.cls}`}>{r.status}</div>
                         </div>
-                    </div>
+                    ))}
                 </div>
             </div>
         </div>
-    </section>
+    </div>
 );
 
 const StatsBar = () => (

@@ -9,7 +9,7 @@ const fmt = (v: number) => new Intl.NumberFormat('en-US', { style: 'currency', c
 const asArray = (x: any) => (Array.isArray(x) ? x : []);
 
 export default function DashboardScreen() {
-  const { username, logout } = useAuth();
+  const { displayName, logout } = useAuth();
   const [loading, setLoading]     = useState(true);
   const [refreshing, setRefresh]  = useState(false);
   const [stats, setStats] = useState({ gross: 0, expenses: 0, net: 0, roi: '0', tenants: 0, units: 0, occupancy: 0 });
@@ -61,7 +61,7 @@ export default function DashboardScreen() {
         {/* Header */}
         <View style={styles.header}>
           <View>
-            <Text style={styles.greeting}>Hello, {username} 👋</Text>
+            <Text style={styles.greeting}>Hello, {displayName} 👋</Text>
             <Text style={styles.subGreeting}>Financial Overview</Text>
           </View>
           <TouchableOpacity onPress={() => Alert.alert('Sign out', 'Are you sure?', [

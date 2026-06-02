@@ -2,9 +2,17 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import * as SecureStore from 'expo-secure-store';
 import { authApi } from '../api';
 
+interface UserProfile {
+  id: number;
+  username: string;
+  email: string;
+  full_name: string | null;
+}
+
 interface AuthState {
   token: string | null;
-  username: string;
+  user: UserProfile | null;
+  displayName: string;
   loading: boolean;
   login: (username: string, password: string) => Promise<void>;
   register: (data: object) => Promise<void>;
@@ -24,35 +32,43 @@ function isExpired(token: string): boolean {
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [token, setToken] = useState<string | null>(null);
-  const [username, setUsername] = useState('');
+  const [user, setUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const refreshProfile = useCallback(async () => {
+    try {
+      const res = await authApi.me();
+      setUser(res.data);
+      await SecureStore.setItemAsync('user', JSON.stringify(res.data));
+    } catch {}
+  }, []);
 
   // On mount — restore session from secure storage
   useEffect(() => {
     (async () => {
       try {
         const stored = await SecureStore.getItemAsync('token');
-        const storedUser = await SecureStore.getItemAsync('username');
+        const storedUser = await SecureStore.getItemAsync('user');
         if (stored && !isExpired(stored)) {
           setToken(stored);
-          setUsername(storedUser ?? '');
+          if (storedUser) setUser(JSON.parse(storedUser));
+          refreshProfile();
         } else {
           await SecureStore.deleteItemAsync('token');
-          await SecureStore.deleteItemAsync('username');
+          await SecureStore.deleteItemAsync('user');
         }
       } catch {}
       setLoading(false);
     })();
-  }, []);
+  }, [refreshProfile]);
 
   const login = useCallback(async (uname: string, password: string) => {
     const res = await authApi.login(uname, password);
     const newToken: string = res.data.access_token;
     await SecureStore.setItemAsync('token', newToken);
-    await SecureStore.setItemAsync('username', uname);
     setToken(newToken);
-    setUsername(uname);
-  }, []);
+    await refreshProfile();
+  }, [refreshProfile]);
 
   const register = useCallback(async (data: object) => {
     await authApi.register(data);
@@ -60,13 +76,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = useCallback(async () => {
     await SecureStore.deleteItemAsync('token');
-    await SecureStore.deleteItemAsync('username');
+    await SecureStore.deleteItemAsync('user');
     setToken(null);
-    setUsername('');
+    setUser(null);
   }, []);
 
+  const displayName = user?.full_name?.trim() || user?.username || 'Account';
+
   return (
-    <AuthContext.Provider value={{ token, username, loading, login, register, logout }}>
+    <AuthContext.Provider value={{ token, user, displayName, loading, login, register, logout }}>
       {children}
     </AuthContext.Provider>
   );

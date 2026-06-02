@@ -30,8 +30,12 @@ api.interceptors.response.use(
     (error) => {
         if (error.response?.status === 401) {
             localStorage.removeItem('token');
-            localStorage.removeItem('username');
-            window.location.href = '/login';
+            localStorage.removeItem('user');
+            // Avoid redirect loops on the public/auth pages
+            const path = window.location.pathname;
+            if (!['/login', '/register', '/forgot-password', '/reset-password', '/'].includes(path)) {
+                window.location.href = '/login';
+            }
         }
         return Promise.reject(error);
     }

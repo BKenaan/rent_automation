@@ -3,9 +3,16 @@ import { LogOut } from 'lucide-react';
 import Sidebar from './Sidebar';
 import { useAuth } from '../context/AuthContext';
 
+function getInitials(name) {
+    if (!name) return 'RM';
+    const parts = name.trim().split(/\s+/);
+    if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+    return name.slice(0, 2).toUpperCase();
+}
+
 const Layout = ({ children }) => {
-    const { logout, username } = useAuth();
-    const initials = username ? username.slice(0, 2).toUpperCase() : 'RM';
+    const { logout, displayName } = useAuth();
+    const initials = getInitials(displayName);
 
     return (
         <div className="app-shell">
@@ -14,7 +21,7 @@ const Layout = ({ children }) => {
                 <header className="topbar">
                     <div className="topbar-user">
                         <div className="topbar-avatar">{initials}</div>
-                        <span>{username || 'Account'}</span>
+                        <span>{displayName}</span>
                     </div>
                     <button
                         className="btn btn-ghost btn-icon"
