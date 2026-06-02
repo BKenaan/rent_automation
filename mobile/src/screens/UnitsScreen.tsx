@@ -1,5 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Alert, FlatList, Modal, RefreshControl, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { fonts } from '../theme';
+import { Alert, FlatList, Modal, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { unitsApi } from '../api';
 import { AlertBox, Badge, Button, Card, EmptyState, Input, Loader } from '../components/ui';
 import { colors, font, radius, spacing } from '../theme';
@@ -56,7 +58,7 @@ export default function UnitsScreen() {
   if (loading) return <Loader />;
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView style={styles.safe} edges={['left','right']}>
       <View style={styles.topBar}>
         <Text style={styles.count}>{units.length} properties</Text>
         <TouchableOpacity style={styles.addBtn} onPress={openCreate}><Text style={styles.addBtnText}>+ Add</Text></TouchableOpacity>
@@ -124,25 +126,25 @@ export default function UnitsScreen() {
 const styles = StyleSheet.create({
   safe:    { flex: 1, backgroundColor: colors.bg },
   topBar:  { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: spacing.lg, paddingBottom: spacing.sm },
-  count:   { fontSize: font.sm, color: colors.text3, fontWeight: '500' },
+  count:   { fontSize: font.sm, color: colors.text3, fontFamily: fonts.medium },
   addBtn:  { backgroundColor: colors.accent, borderRadius: radius.md, paddingHorizontal: spacing.md, paddingVertical: 7 },
-  addBtnText: { color: '#fff', fontWeight: '600', fontSize: font.sm },
+  addBtnText: { color: '#fff', fontFamily: fonts.semibold, fontSize: font.sm },
   card:    { marginBottom: spacing.sm },
   cardTop: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: spacing.md },
-  unitName:    { fontSize: font.md, fontWeight: '700', color: colors.text },
+  unitName:    { fontSize: font.md, fontFamily: fonts.bold, color: colors.text },
   unitAddress: { fontSize: font.sm, color: colors.text3, marginTop: 2 },
   stats:   { flexDirection: 'row', justifyContent: 'space-between', marginBottom: spacing.md, paddingTop: spacing.sm, borderTopWidth: 1, borderTopColor: colors.border },
   stat:    { alignItems: 'center' },
   statLabel: { fontSize: 10, color: colors.text3, textTransform: 'uppercase', letterSpacing: 0.5 },
-  statValue: { fontSize: font.sm, fontWeight: '600', color: colors.text, marginTop: 2 },
+  statValue: { fontSize: font.sm, fontFamily: fonts.semibold, color: colors.text, marginTop: 2 },
   actions:  { flexDirection: 'row', gap: spacing.sm },
   actionBtn: { flex: 1, paddingVertical: spacing.sm, borderRadius: radius.md, alignItems: 'center', backgroundColor: colors.surface2, borderWidth: 1, borderColor: colors.borderMd },
-  actionEdit: { color: colors.accentHover, fontWeight: '600', fontSize: font.sm },
+  actionEdit: { color: colors.accentHover, fontFamily: fonts.semibold, fontSize: font.sm },
   actionDanger: { backgroundColor: colors.redDim, borderColor: 'transparent' },
-  actionDeleteText: { color: colors.red, fontWeight: '600', fontSize: font.sm },
+  actionDeleteText: { color: colors.red, fontFamily: fonts.semibold, fontSize: font.sm },
   modalSafe: { flex: 1, backgroundColor: colors.surface1 },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: spacing.lg, borderBottomWidth: 1, borderBottomColor: colors.border },
-  modalTitle: { fontSize: font.lg, fontWeight: '700', color: colors.text },
-  modalClose: { color: colors.accentHover, fontSize: font.md, fontWeight: '500' },
+  modalTitle: { fontSize: font.lg, fontFamily: fonts.bold, color: colors.text },
+  modalClose: { color: colors.accentHover, fontSize: font.md, fontFamily: fonts.medium },
   modalBody:  { padding: spacing.lg },
 });

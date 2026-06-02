@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
-import { KeyboardAvoidingView, Platform, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { fonts } from '../../theme';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { authApi } from '../../api';
 import { AlertBox, Button, Input } from '../../components/ui';
 import { colors, font, spacing } from '../../theme';
@@ -56,8 +58,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.accentDim, borderWidth: 1, borderColor: colors.accentBorder,
     alignItems: 'center', justifyContent: 'center', marginBottom: spacing.lg,
   },
-  logoText: { fontSize: font.xl, fontWeight: '800', color: colors.accentHover },
-  title:    { fontSize: font.xxl, fontWeight: '700', color: colors.text, letterSpacing: -0.5 },
+  logoText: { fontSize: font.xl, fontFamily: fonts.extrabold, color: colors.accentHover },
+  title:    { fontSize: font.xxl, fontFamily: fonts.bold, color: colors.text, letterSpacing: -0.5 },
   subtitle: { fontSize: font.sm, color: colors.text2, marginTop: 4 },
   back:     { alignItems: 'center', marginTop: spacing.xl },
   backText: { color: colors.text2, fontSize: font.sm },

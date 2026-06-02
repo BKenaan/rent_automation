@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
+import { fonts } from '../../theme';
 import {
-  KeyboardAvoidingView, Platform, SafeAreaView,
-  ScrollView, StyleSheet, Text, TouchableOpacity, View,
+  KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../context/AuthContext';
 import { AlertBox, Button, Input } from '../../components/ui';
 import { colors, font, spacing } from '../../theme';
@@ -85,12 +86,12 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: colors.accentBorder,
     alignItems: 'center', justifyContent: 'center', marginBottom: spacing.lg,
   },
-  logoText:   { fontSize: font.xl, fontWeight: '800', color: colors.accentHover },
-  title:      { fontSize: font.xxl, fontWeight: '700', color: colors.text, letterSpacing: -0.5 },
+  logoText:   { fontSize: font.xl, fontFamily: fonts.extrabold, color: colors.accentHover },
+  title:      { fontSize: font.xxl, fontFamily: fonts.bold, color: colors.text, letterSpacing: -0.5 },
   subtitle:   { fontSize: font.sm, color: colors.text2, marginTop: 4 },
   forgotWrap: { alignSelf: 'flex-end', marginBottom: spacing.md },
-  forgot:     { fontSize: font.sm, color: colors.accentHover, fontWeight: '500' },
+  forgot:     { fontSize: font.sm, color: colors.accentHover, fontFamily: fonts.medium },
   footer:     { flexDirection: 'row', justifyContent: 'center', marginTop: spacing.xl },
   footerText: { color: colors.text2, fontSize: font.sm },
-  footerLink: { color: colors.accentHover, fontSize: font.sm, fontWeight: '600' },
+  footerLink: { color: colors.accentHover, fontSize: font.sm, fontFamily: fonts.semibold },
 });

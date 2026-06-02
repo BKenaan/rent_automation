@@ -14,7 +14,7 @@ import {
   View,
   ViewStyle,
 } from 'react-native';
-import { colors, font, radius, spacing } from '../theme';
+import { colors, font, fonts, radius, spacing } from '../theme';
 
 // ── Card ──────────────────────────────────────────────────────────────────────
 export const Card: React.FC<{ style?: ViewStyle; children: React.ReactNode }> = ({ style, children }) => (
@@ -163,12 +163,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: spacing.xl,
   },
-  btnLabel: { fontWeight: '600', letterSpacing: 0.2 },
+  btnLabel: { fontFamily: fonts.semibold, letterSpacing: 0.2 },
   inputLabel: {
     fontSize: font.sm,
     color: colors.text2,
     marginBottom: 6,
-    fontWeight: '500',
+    fontFamily: fonts.medium,
   },
   input: {
     backgroundColor: colors.surface2,
@@ -178,22 +178,23 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     color: colors.text,
     fontSize: font.md,
+    fontFamily: fonts.regular,
   },
   inputError: { borderColor: colors.red },
-  errorText: { color: colors.red, fontSize: font.xs, marginTop: 4 },
+  errorText: { color: colors.red, fontSize: font.xs, marginTop: 4, fontFamily: fonts.regular },
   badge: {
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: radius.full,
     alignSelf: 'flex-start',
   },
-  badgeText: { fontSize: 10, fontWeight: '700', letterSpacing: 0.5 },
+  badgeText: { fontSize: 10, fontFamily: fonts.bold, letterSpacing: 0.5 },
   emptyState: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 40 },
-  emptyText:  { color: colors.text3, fontSize: font.md, textAlign: 'center' },
+  emptyText:  { color: colors.text3, fontSize: font.md, textAlign: 'center', fontFamily: fonts.regular, lineHeight: 22 },
   loader:     { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bg },
   sectionTitle: {
     fontSize: font.sm,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
     color: colors.text3,
     textTransform: 'uppercase',
     letterSpacing: 0.8,
@@ -206,16 +207,16 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
-  rowTitle: { fontSize: font.md, color: colors.text, fontWeight: '500' },
-  rowSub:   { fontSize: font.sm, color: colors.text3, marginTop: 2 },
+  rowTitle: { fontSize: font.md, color: colors.text, fontFamily: fonts.medium },
+  rowSub:   { fontSize: font.sm, color: colors.text3, marginTop: 2, fontFamily: fonts.regular },
   alertBox: {
     borderWidth: 1,
     borderRadius: radius.md,
     padding: spacing.md,
     marginBottom: spacing.md,
   },
-  alertText: { fontSize: font.sm, lineHeight: 20 },
+  alertText: { fontSize: font.sm, lineHeight: 20, fontFamily: fonts.regular },
   metric: { flex: 1, minWidth: '45%' },
-  metricLabel: { fontSize: 10, color: colors.text3, textTransform: 'uppercase', letterSpacing: 0.6, fontWeight: '600' },
-  metricValue: { fontSize: font.xl, fontWeight: '700', marginTop: 4, letterSpacing: -0.5 },
+  metricLabel: { fontSize: 10, color: colors.text3, textTransform: 'uppercase', letterSpacing: 0.6, fontFamily: fonts.semibold },
+  metricValue: { fontSize: font.xl, fontFamily: fonts.extrabold, marginTop: 4, letterSpacing: -0.5 },
 });

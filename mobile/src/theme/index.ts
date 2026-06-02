@@ -1,5 +1,16 @@
+// Inter font family — weight is baked into each family name (avoids faux-bold)
+export const fonts = {
+  regular:  'Inter_400Regular',
+  medium:   'Inter_500Medium',
+  semibold: 'Inter_600SemiBold',
+  bold:     'Inter_700Bold',
+  extrabold:'Inter_800ExtraBold',
+};
+
 export const colors = {
   bg:       '#09090b',
+  navy:     '#1B2B4E',   // brand navy (header)
+  navyDeep: '#16243f',
   surface1: '#111113',
   surface2: '#18181b',
   surface3: '#27272a',

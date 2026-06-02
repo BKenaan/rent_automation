@@ -1,5 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Alert, FlatList, Modal, RefreshControl, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { fonts } from '../theme';
+import { Alert, FlatList, Modal, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { paymentsApi } from '../api';
 import { AlertBox, Badge, Button, Card, EmptyState, Input, Loader } from '../components/ui';
 import { colors, font, radius, spacing } from '../theme';
@@ -49,7 +51,7 @@ export default function PaymentsScreen() {
   if (loading) return <Loader />;
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView style={styles.safe} edges={['left','right']}>
       {/* Summary */}
       <View style={styles.summary}>
         <View style={styles.summaryItem}><Text style={[styles.summaryNum, { color: colors.green }]}>{summary.paid}</Text><Text style={styles.summaryLabel}>Paid</Text></View>
@@ -131,27 +133,27 @@ const styles = StyleSheet.create({
   safe:    { flex: 1, backgroundColor: colors.bg },
   summary: { flexDirection: 'row', justifyContent: 'space-around', padding: spacing.lg, backgroundColor: colors.surface1, borderBottomWidth: 1, borderBottomColor: colors.border },
   summaryItem:  { alignItems: 'center' },
-  summaryNum:   { fontSize: font.xxl, fontWeight: '800' },
+  summaryNum:   { fontSize: font.xxl, fontFamily: fonts.extrabold },
   summaryLabel: { fontSize: font.xs, color: colors.text3, textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 2 },
   card:    { marginBottom: spacing.sm },
   cardRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
-  tenant:  { fontSize: font.md, fontWeight: '600', color: colors.text },
+  tenant:  { fontSize: font.md, fontFamily: fonts.semibold, color: colors.text },
   unit:    { fontSize: font.sm, color: colors.text3, marginTop: 2 },
-  amount:  { fontSize: font.md, fontWeight: '700', color: colors.text, marginBottom: 4 },
+  amount:  { fontSize: font.md, fontFamily: fonts.bold, color: colors.text, marginBottom: 4 },
   recordBtn:     { marginTop: spacing.md, backgroundColor: colors.accentDim, borderRadius: radius.md, paddingVertical: spacing.sm, alignItems: 'center', borderWidth: 1, borderColor: colors.accentBorder },
-  recordBtnText: { color: colors.accentHover, fontWeight: '600', fontSize: font.sm },
+  recordBtnText: { color: colors.accentHover, fontFamily: fonts.semibold, fontSize: font.sm },
   via:           { marginTop: spacing.sm, fontSize: font.xs, color: colors.text3 },
   modalSafe:     { flex: 1, backgroundColor: colors.surface1 },
   modalHeader:   { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: spacing.lg, borderBottomWidth: 1, borderBottomColor: colors.border },
-  modalTitle:    { fontSize: font.lg, fontWeight: '700', color: colors.text },
-  modalClose:    { color: colors.accentHover, fontSize: font.md, fontWeight: '500' },
+  modalTitle:    { fontSize: font.lg, fontFamily: fonts.bold, color: colors.text },
+  modalClose:    { color: colors.accentHover, fontSize: font.md, fontFamily: fonts.medium },
   modalBody:     { padding: spacing.lg },
   infoLabel:     { fontSize: font.xs, color: colors.text3, marginTop: spacing.sm, textTransform: 'uppercase', letterSpacing: 0.5 },
-  infoValue:     { fontSize: font.md, fontWeight: '600', color: colors.text, marginTop: 2 },
-  inputLabel:    { fontSize: font.sm, color: colors.text2, marginBottom: 8, fontWeight: '500' },
+  infoValue:     { fontSize: font.md, fontFamily: fonts.semibold, color: colors.text, marginTop: 2 },
+  inputLabel:    { fontSize: font.sm, color: colors.text2, marginBottom: 8, fontFamily: fonts.medium },
   methods:       { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginBottom: spacing.md },
   methodBtn:     { paddingHorizontal: 12, paddingVertical: 7, borderRadius: radius.full, backgroundColor: colors.surface2, borderWidth: 1, borderColor: colors.borderMd },
   methodActive:  { backgroundColor: colors.accentDim, borderColor: colors.accentBorder },
   methodText:    { fontSize: font.sm, color: colors.text2 },
-  methodActiveText: { color: colors.accentHover, fontWeight: '600' },
+  methodActiveText: { color: colors.accentHover, fontFamily: fonts.semibold },
 });

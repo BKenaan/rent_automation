@@ -1,8 +1,9 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import { fonts } from '../theme';
 import {
-  Alert, FlatList, Modal, RefreshControl, SafeAreaView,
-  StyleSheet, Text, TextInput, TouchableOpacity, View,
+  Alert, FlatList, Modal, RefreshControl, StyleSheet, Text, TextInput, TouchableOpacity, View,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { tenantsApi } from '../api';
 import { AlertBox, Badge, Button, Card, EmptyState, Input, Loader } from '../components/ui';
 import { colors, font, radius, spacing } from '../theme';
@@ -65,7 +66,7 @@ export default function TenantsScreen() {
   if (loading) return <Loader />;
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView style={styles.safe} edges={['left','right']}>
       {/* Search bar */}
       <View style={styles.searchBar}>
         <TextInput
@@ -135,22 +136,22 @@ const styles = StyleSheet.create({
   searchBar:    { flexDirection: 'row', gap: spacing.sm, padding: spacing.lg, paddingBottom: spacing.sm },
   searchInput:  { flex: 1, backgroundColor: colors.surface2, borderRadius: radius.md, paddingHorizontal: spacing.md, paddingVertical: spacing.sm, color: colors.text, fontSize: font.sm, borderWidth: 1, borderColor: colors.borderMd },
   addBtn:       { backgroundColor: colors.accent, borderRadius: radius.md, paddingHorizontal: spacing.md, alignItems: 'center', justifyContent: 'center' },
-  addBtnText:   { color: '#fff', fontWeight: '600', fontSize: font.sm },
+  addBtnText:   { color: '#fff', fontFamily: fonts.semibold, fontSize: font.sm },
   card:         { marginBottom: spacing.sm },
   cardHeader:   { flexDirection: 'row', alignItems: 'flex-start' },
   avatar:       { width: 40, height: 40, borderRadius: radius.full, backgroundColor: colors.accentDim, borderWidth: 1, borderColor: colors.accentBorder, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
-  avatarText:   { color: colors.accentHover, fontWeight: '700', fontSize: font.md },
-  name:         { fontSize: font.md, fontWeight: '600', color: colors.text },
+  avatarText:   { color: colors.accentHover, fontFamily: fonts.bold, fontSize: font.md },
+  name:         { fontSize: font.md, fontFamily: fonts.semibold, color: colors.text },
   email:        { fontSize: font.sm, color: colors.text2, marginTop: 1 },
   phone:        { fontSize: font.sm, color: colors.text3 },
   actions:      { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.md },
   actionBtn:    { flex: 1, paddingVertical: spacing.sm, borderRadius: radius.md, alignItems: 'center', backgroundColor: colors.surface2, borderWidth: 1, borderColor: colors.borderMd },
-  actionEdit:   { color: colors.accentHover, fontWeight: '600', fontSize: font.sm },
+  actionEdit:   { color: colors.accentHover, fontFamily: fonts.semibold, fontSize: font.sm },
   actionDanger: { backgroundColor: colors.redDim, borderColor: 'transparent' },
-  actionDeleteText: { color: colors.red, fontWeight: '600', fontSize: font.sm },
+  actionDeleteText: { color: colors.red, fontFamily: fonts.semibold, fontSize: font.sm },
   modalSafe:    { flex: 1, backgroundColor: colors.surface1 },
   modalHeader:  { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: spacing.lg, borderBottomWidth: 1, borderBottomColor: colors.border },
-  modalTitle:   { fontSize: font.lg, fontWeight: '700', color: colors.text },
-  modalClose:   { color: colors.accentHover, fontSize: font.md, fontWeight: '500' },
+  modalTitle:   { fontSize: font.lg, fontFamily: fonts.bold, color: colors.text },
+  modalClose:   { color: colors.accentHover, fontSize: font.md, fontFamily: fonts.medium },
   modalBody:    { padding: spacing.lg },
 });

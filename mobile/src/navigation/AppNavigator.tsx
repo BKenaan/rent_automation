@@ -2,7 +2,7 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { LayoutDashboard, Users, Building2, FileText, CreditCard, ReceiptText } from 'lucide-react-native';
-import { colors } from '../theme';
+import { colors, fonts } from '../theme';
 
 import DashboardScreen  from '../screens/DashboardScreen';
 import TenantsScreen    from '../screens/TenantsScreen';
@@ -20,13 +20,16 @@ const tabBar = {
     height: 60,
     paddingBottom: 8,
   },
-  tabBarActiveTintColor:   colors.accent,
+  tabBarActiveTintColor:   colors.accentHover,
   tabBarInactiveTintColor: colors.text3,
-  tabBarLabelStyle: { fontSize: 10 },
+  tabBarLabelStyle: { fontSize: 10, fontFamily: fonts.medium },
   tabBarIconStyle: { marginBottom: -2 },
-  headerStyle:   { backgroundColor: colors.surface1 },
-  headerTintColor: colors.text,
-  headerTitleStyle: { fontWeight: '600' as const, fontSize: 16 },
+  headerStyle: {
+    backgroundColor: colors.navy,
+    borderBottomWidth: 0,
+  },
+  headerTintColor: '#fff',
+  headerTitleStyle: { fontFamily: fonts.semibold, fontSize: 17, color: '#fff' },
   headerShadowVisible: false,
 };
 

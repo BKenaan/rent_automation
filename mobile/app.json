@@ -36,7 +36,9 @@
     },
     "plugins": [
       "expo-secure-store",
-      "expo-sharing"
+      "expo-sharing",
+      "expo-font",
+      "expo-splash-screen"
     ],
     "extra": {
       "eas": {

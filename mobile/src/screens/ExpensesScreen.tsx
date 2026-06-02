@@ -1,5 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Alert, FlatList, Modal, RefreshControl, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { fonts } from '../theme';
+import { Alert, FlatList, Modal, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { expensesApi, unitsApi } from '../api';
 import { AlertBox, Badge, Button, Card, EmptyState, Input, Loader } from '../components/ui';
 import { colors, font, radius, spacing } from '../theme';
@@ -62,7 +64,7 @@ export default function ExpensesScreen() {
   if (loading) return <Loader />;
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView style={styles.safe} edges={['left','right']}>
       <View style={styles.topBar}>
         <View>
           <Text style={styles.totalLabel}>Total Expenses</Text>
@@ -140,30 +142,30 @@ const styles = StyleSheet.create({
   safe:    { flex: 1, backgroundColor: colors.bg },
   topBar:  { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: spacing.lg, backgroundColor: colors.surface1, borderBottomWidth: 1, borderBottomColor: colors.border },
   totalLabel: { fontSize: font.xs, color: colors.text3, textTransform: 'uppercase', letterSpacing: 0.5 },
-  totalValue: { fontSize: font.xxl, fontWeight: '800', color: colors.red, marginTop: 2 },
+  totalValue: { fontSize: font.xxl, fontFamily: fonts.extrabold, color: colors.red, marginTop: 2 },
   addBtn:  { backgroundColor: colors.accent, borderRadius: radius.md, paddingHorizontal: spacing.md, paddingVertical: 7 },
-  addBtnText: { color: '#fff', fontWeight: '600', fontSize: font.sm },
+  addBtnText: { color: '#fff', fontFamily: fonts.semibold, fontSize: font.sm },
   card:    { marginBottom: spacing.sm },
   cardRow: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.md },
   cardTop: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginBottom: spacing.xs },
   unitName:{ fontSize: font.sm, color: colors.text2 },
   date:    { fontSize: font.xs, color: colors.text3 },
   desc:    { fontSize: font.sm, color: colors.text3, marginTop: 4 },
-  amount:  { fontSize: font.lg, fontWeight: '700', color: colors.red, flexShrink: 0 },
+  amount:  { fontSize: font.lg, fontFamily: fonts.bold, color: colors.red, flexShrink: 0 },
   actions: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.md },
   actionBtn:   { flex: 1, paddingVertical: spacing.sm, borderRadius: radius.md, alignItems: 'center', backgroundColor: colors.surface2, borderWidth: 1, borderColor: colors.borderMd },
-  actionEdit:  { color: colors.accentHover, fontWeight: '600', fontSize: font.sm },
+  actionEdit:  { color: colors.accentHover, fontFamily: fonts.semibold, fontSize: font.sm },
   actionDanger: { backgroundColor: colors.redDim, borderColor: 'transparent' },
-  actionDeleteText: { color: colors.red, fontWeight: '600', fontSize: font.sm },
+  actionDeleteText: { color: colors.red, fontFamily: fonts.semibold, fontSize: font.sm },
   modalSafe:   { flex: 1, backgroundColor: colors.surface1 },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: spacing.lg, borderBottomWidth: 1, borderBottomColor: colors.border },
-  modalTitle:  { fontSize: font.lg, fontWeight: '700', color: colors.text },
-  modalClose:  { color: colors.accentHover, fontSize: font.md, fontWeight: '500' },
+  modalTitle:  { fontSize: font.lg, fontFamily: fonts.bold, color: colors.text },
+  modalClose:  { color: colors.accentHover, fontSize: font.md, fontFamily: fonts.medium },
   modalBody:   { padding: spacing.lg },
-  selectLabel: { fontSize: font.sm, color: colors.text2, fontWeight: '500', marginBottom: spacing.sm },
+  selectLabel: { fontSize: font.sm, color: colors.text2, fontFamily: fonts.medium, marginBottom: spacing.sm },
   chipRow:     { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginBottom: spacing.md },
   chip:        { paddingHorizontal: 12, paddingVertical: 7, borderRadius: radius.full, backgroundColor: colors.surface2, borderWidth: 1, borderColor: colors.borderMd },
   chipActive:  { backgroundColor: colors.accentDim, borderColor: colors.accentBorder },
   chipText:    { fontSize: font.sm, color: colors.text2 },
-  chipActiveText: { color: colors.accentHover, fontWeight: '600' },
+  chipActiveText: { color: colors.accentHover, fontFamily: fonts.semibold },
 });

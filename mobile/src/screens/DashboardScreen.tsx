@@ -1,5 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Alert, RefreshControl, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { fonts } from '../theme';
+import { Alert, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { tenantsApi, unitsApi, paymentsApi, leasesApi, expensesApi } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { Card, Loader, MetricCard, SectionTitle } from '../components/ui';
@@ -53,7 +55,7 @@ export default function DashboardScreen() {
   if (loading) return <Loader />;
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView style={styles.safe} edges={['left','right']}>
       <ScrollView
         contentContainerStyle={styles.scroll}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefresh(true); load(); }} tintColor={colors.accent} />}
@@ -125,19 +127,19 @@ const styles = StyleSheet.create({
   safe:   { flex: 1, backgroundColor: colors.bg },
   scroll: { padding: spacing.lg, paddingBottom: 32 },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: spacing.xl },
-  greeting:    { fontSize: font.xl, fontWeight: '700', color: colors.text },
+  greeting:    { fontSize: font.xl, fontFamily: fonts.bold, color: colors.text },
   subGreeting: { fontSize: font.sm, color: colors.text3, marginTop: 2 },
   logoutBtn:   { backgroundColor: colors.redDim, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6 },
-  logoutText:  { color: colors.red, fontSize: font.xs, fontWeight: '600' },
+  logoutText:  { color: colors.red, fontSize: font.xs, fontFamily: fonts.semibold },
   metricsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginBottom: spacing.md },
   section:     { marginBottom: spacing.md },
   occupancyRow:{ flexDirection: 'row', justifyContent: 'space-around', marginTop: spacing.sm },
   occItem:     { alignItems: 'center' },
-  occNum:      { fontSize: font.xxl, fontWeight: '700', color: colors.text },
+  occNum:      { fontSize: font.xxl, fontFamily: fonts.bold, color: colors.text },
   occLabel:    { fontSize: font.xs, color: colors.text3, marginTop: 2 },
   emptyMsg:    { color: colors.text3, fontSize: font.sm, marginTop: spacing.sm },
   payRow:      { flexDirection: 'row', alignItems: 'center', paddingVertical: spacing.sm, borderBottomWidth: 1, borderBottomColor: colors.border },
-  payName:     { fontSize: font.sm, fontWeight: '600', color: colors.text },
+  payName:     { fontSize: font.sm, fontFamily: fonts.semibold, color: colors.text },
   payUnit:     { fontSize: font.xs, color: colors.text3, marginTop: 2 },
-  payAmt:      { fontSize: font.sm, fontWeight: '700', color: colors.accentHover },
+  payAmt:      { fontSize: font.sm, fontFamily: fonts.bold, color: colors.accentHover },
 });
