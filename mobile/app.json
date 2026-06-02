@@ -1,0 +1,38 @@
+{
+  "expo": {
+    "name": "RentalMan",
+    "slug": "rentalman",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "scheme": "rentalman",
+    "splash": {
+      "backgroundColor": "#09090b",
+      "resizeMode": "contain"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.rentalman.app",
+      "buildNumber": "1"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "backgroundColor": "#09090b"
+      },
+      "package": "com.rentalman.app",
+      "versionCode": 1,
+      "permissions": ["android.permission.INTERNET", "android.permission.VIBRATE"],
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-secure-store",
+      "expo-sharing"
+    ]
+  }
+}
