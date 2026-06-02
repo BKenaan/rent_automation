@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import { getErrorMessage } from '../utils/errors';
 import { fonts } from '../theme';
 import { Alert, FlatList, Modal, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -29,7 +30,7 @@ export default function PaymentsScreen() {
     finally { setLoading(false); setRefresh(false); }
   }, []);
 
-  useEffect(() => { load(); }, [load]);
+  useFocusEffect(useCallback(() => { load(); }, [load]));
 
   const openRecord = (p: any) => {
     setRecording(p);

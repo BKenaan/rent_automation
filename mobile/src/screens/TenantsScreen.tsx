@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import { getErrorMessage } from '../utils/errors';
 import { fonts } from '../theme';
 import {
@@ -28,7 +29,7 @@ export default function TenantsScreen() {
     finally { setLoading(false); setRefresh(false); }
   }, []);
 
-  useEffect(() => { load(); }, [load]);
+  useFocusEffect(useCallback(() => { load(); }, [load]));
 
   const openCreate = () => { setEditing(null); setForm(BLANK); setFormError(''); setModal(true); };
   const openEdit   = (t: any) => {

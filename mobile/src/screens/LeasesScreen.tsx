@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import { getErrorMessage } from '../utils/errors';
 import { fonts } from '../theme';
 import { Alert, FlatList, Modal, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -49,7 +50,7 @@ export default function LeasesScreen() {
     finally { setLoading(false); setRefresh(false); }
   }, []);
 
-  useEffect(() => { load(); }, [load]);
+  useFocusEffect(useCallback(() => { load(); }, [load]));
 
   const tenantName = (id: number) => tenants.find((t: any) => t.id === id)?.full_name ?? `Tenant #${id}`;
   const unitLabel  = (id: number) => {
