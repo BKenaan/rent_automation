@@ -25,7 +25,10 @@
       },
       "package": "com.rentalman.app",
       "versionCode": 1,
-      "permissions": ["android.permission.INTERNET", "android.permission.VIBRATE"],
+      "permissions": [
+        "android.permission.INTERNET",
+        "android.permission.VIBRATE"
+      ],
       "predictiveBackGestureEnabled": false
     },
     "web": {
@@ -34,6 +37,11 @@
     "plugins": [
       "expo-secure-store",
       "expo-sharing"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "9cc20312-ac30-4b4a-8303-89ee93762e6b"
+      }
+    }
   }
 }

@@ -1,12 +1,13 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { LayoutDashboard, Users, Building2, CreditCard, ReceiptText } from 'lucide-react-native';
+import { LayoutDashboard, Users, Building2, FileText, CreditCard, ReceiptText } from 'lucide-react-native';
 import { colors } from '../theme';
 
 import DashboardScreen  from '../screens/DashboardScreen';
 import TenantsScreen    from '../screens/TenantsScreen';
 import UnitsScreen      from '../screens/UnitsScreen';
+import LeasesScreen     from '../screens/LeasesScreen';
 import PaymentsScreen   from '../screens/PaymentsScreen';
 import ExpensesScreen   from '../screens/ExpensesScreen';
 
@@ -21,6 +22,8 @@ const tabBar = {
   },
   tabBarActiveTintColor:   colors.accent,
   tabBarInactiveTintColor: colors.text3,
+  tabBarLabelStyle: { fontSize: 10 },
+  tabBarIconStyle: { marginBottom: -2 },
   headerStyle:   { backgroundColor: colors.surface1 },
   headerTintColor: colors.text,
   headerTitleStyle: { fontWeight: '600' as const, fontSize: 16 },
@@ -44,6 +47,11 @@ export default function AppNavigator() {
         name="Units"
         component={UnitsScreen}
         options={{ title: 'Units', tabBarIcon: ({ color, size }) => <Building2 color={color} size={size} /> }}
+      />
+      <Tab.Screen
+        name="Leases"
+        component={LeasesScreen}
+        options={{ title: 'Leases', tabBarIcon: ({ color, size }) => <FileText color={color} size={size} /> }}
       />
       <Tab.Screen
         name="Payments"
