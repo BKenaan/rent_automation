@@ -334,8 +334,7 @@ const Footer = () => (
             <div className="lp-container">
                 <span>© {new Date().getFullYear()} RentalMan. All rights reserved.</span>
                 <div className="lp-footer-bottom-links">
-                    <a href="#">Privacy</a>
-                    <a href="#">Terms</a>
+                    <Link to="/privacy">Privacy Policy</Link>
                 </div>
             </div>
         </div>

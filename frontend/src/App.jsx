@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, Link } from 'react-router-dom';
 import Layout from './components/Layout';
 import Landing from './pages/Landing';
+import Privacy from './pages/Privacy';
 import Dashboard from './pages/Dashboard';
 import Tenants from './pages/Tenants';
 import Units from './pages/Units';
@@ -42,6 +43,7 @@ function App() {
         <Routes>
           {/* Public landing */}
           <Route path="/" element={<Landing />} />
+          <Route path="/privacy" element={<Privacy />} />
 
           {/* Auth pages — redirect to dashboard if already logged in */}
           <Route path="/login"          element={<PublicRoute><Login /></PublicRoute>} />
