@@ -7,6 +7,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../context/AuthContext';
 import { AlertBox, Button, Input } from '../../components/ui';
+import Logo from '../../components/Logo';
 import { colors, font, spacing } from '../../theme';
 
 export default function LoginScreen({ navigation }: any) {
@@ -32,9 +33,7 @@ export default function LoginScreen({ navigation }: any) {
         <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
           {/* Logo area */}
           <View style={styles.header}>
-            <View style={styles.logoBox}>
-              <Text style={styles.logoText}>RM</Text>
-            </View>
+            <Logo size={60} withBadge />
             <Text style={styles.title}>Welcome back</Text>
             <Text style={styles.subtitle}>Sign in to your RentalMan account</Text>
           </View>

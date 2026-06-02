@@ -5,6 +5,7 @@ import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, Touchable
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { authApi } from '../../api';
 import { AlertBox, Button, Input } from '../../components/ui';
+import Logo from '../../components/Logo';
 import { colors, font, spacing } from '../../theme';
 
 export default function ForgotPasswordScreen({ navigation }: any) {
@@ -26,7 +27,7 @@ export default function ForgotPasswordScreen({ navigation }: any) {
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
           <View style={styles.header}>
-            <View style={styles.logoBox}><Text style={styles.logoText}>RM</Text></View>
+            <Logo size={60} withBadge />
             <Text style={styles.title}>Forgot password?</Text>
             <Text style={styles.subtitle}>We'll send a reset link to your email</Text>
           </View>

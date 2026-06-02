@@ -7,6 +7,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../context/AuthContext';
 import { AlertBox, Button, Input } from '../../components/ui';
+import Logo from '../../components/Logo';
 import { colors, font, spacing } from '../../theme';
 
 function validatePassword(pwd: string): string | null {
@@ -42,7 +43,7 @@ export default function RegisterScreen({ navigation }: any) {
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
           <View style={styles.header}>
-            <View style={styles.logoBox}><Text style={styles.logoText}>RM</Text></View>
+            <Logo size={60} withBadge />
             <Text style={styles.title}>Create account</Text>
             <Text style={styles.subtitle}>Start managing your portfolio</Text>
           </View>
