@@ -1,9 +1,11 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import { getErrorMessage } from '../utils/errors';
 import { fonts } from '../theme';
 import { Alert, FlatList, Modal, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { paymentsApi } from '../api';
 import { AlertBox, Badge, Button, Card, EmptyState, Input, Loader } from '../components/ui';
+import DateField from '../components/DateField';
 import { colors, font, radius, spacing } from '../theme';
 
 function statusVariant(s: string): 'green' | 'yellow' | 'red' | 'neutral' {
@@ -41,7 +43,7 @@ export default function PaymentsScreen() {
     try {
       await paymentsApi.record(recording.id, form);
       setRecording(null); load();
-    } catch (e: any) { setFormError(e.response?.data?.detail ?? 'Failed to record payment.'); }
+    } catch (e: any) { setFormError(getErrorMessage(e, 'Failed to record payment.')); }
     finally { setSubmit(false); }
   };
 
@@ -118,7 +120,7 @@ export default function PaymentsScreen() {
               ))}
             </View>
 
-            <Input label="Payment Date" placeholder="YYYY-MM-DD" value={form.paid_at} onChangeText={v => setForm({ ...form, paid_at: v })} />
+            <DateField label="Payment Date" value={form.paid_at} onChange={v => setForm({ ...form, paid_at: v })} />
             <Input label="Reference # (optional)" placeholder="Transaction ID, Receipt #…" value={form.reference} onChangeText={v => setForm({ ...form, reference: v })} />
             <Input label="Notes (optional)" placeholder="Internal notes…" multiline value={form.notes} onChangeText={v => setForm({ ...form, notes: v })} />
             <Button label={submitting ? 'Recording…' : 'Confirm Payment'} loading={submitting} size="lg" onPress={handleRecord} />

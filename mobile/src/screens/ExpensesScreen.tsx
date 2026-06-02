@@ -1,9 +1,11 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import { getErrorMessage } from '../utils/errors';
 import { fonts } from '../theme';
 import { Alert, FlatList, Modal, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { expensesApi, unitsApi } from '../api';
 import { AlertBox, Badge, Button, Card, EmptyState, Input, Loader } from '../components/ui';
+import DateField from '../components/DateField';
 import { colors, font, radius, spacing } from '../theme';
 
 const CATS = ['Maintenance','Repairs','Utilities','Insurance','Taxes','Management Fee','Marketing','Other'];
@@ -55,7 +57,7 @@ export default function ExpensesScreen() {
       if (editing) await expensesApi.update(editing.id, payload);
       else await expensesApi.create(payload);
       setModal(false); load();
-    } catch (e: any) { setFormError(e.response?.data?.detail ?? 'Failed to save expense.'); }
+    } catch (e: any) { setFormError(getErrorMessage(e, 'Failed to save expense.')); }
     finally { setSubmit(false); }
   };
 
@@ -128,7 +130,7 @@ export default function ExpensesScreen() {
             </View>
 
             <Input label="Amount ($)" placeholder="0.00" keyboardType="decimal-pad" value={form.amount} onChangeText={v => setForm({ ...form, amount: v })} />
-            <Input label="Date" placeholder="YYYY-MM-DD" value={form.date} onChangeText={v => setForm({ ...form, date: v })} />
+            <DateField label="Date" value={form.date} onChange={v => setForm({ ...form, date: v })} />
             <Input label="Description (optional)" placeholder="Details…" multiline value={form.description} onChangeText={v => setForm({ ...form, description: v })} />
             <Button label={submitting ? 'Saving…' : editing ? 'Update Expense' : 'Record Expense'} loading={submitting} size="lg" onPress={handleSubmit} />
           </View>

@@ -14,6 +14,7 @@ import {
 } from '@expo-google-fonts/inter';
 import { AuthProvider } from './src/context/AuthContext';
 import RootNavigator from './src/navigation/RootNavigator';
+import ErrorBoundary from './src/components/ErrorBoundary';
 import { colors } from './src/theme';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -37,9 +38,11 @@ export default function App() {
     <SafeAreaProvider>
       <View style={{ flex: 1, backgroundColor: colors.bg }} onLayout={onReady}>
         <StatusBar style="light" />
-        <AuthProvider>
-          <RootNavigator />
-        </AuthProvider>
+        <ErrorBoundary>
+          <AuthProvider>
+            <RootNavigator />
+          </AuthProvider>
+        </ErrorBoundary>
       </View>
     </SafeAreaProvider>
   );

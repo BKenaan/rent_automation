@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { getErrorMessage } from '../../utils/errors';
 import { fonts } from '../../theme';
 import {
   KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View,
@@ -21,7 +22,7 @@ export default function LoginScreen({ navigation }: any) {
     try {
       await login(identifier.trim(), password);
     } catch (err: any) {
-      setError(err.response?.data?.detail ?? 'Invalid credentials. Please try again.');
+      setError(getErrorMessage(err, 'Invalid credentials. Please try again.'));
     } finally { setLoading(false); }
   };
 

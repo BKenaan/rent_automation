@@ -38,7 +38,8 @@
       "expo-secure-store",
       "expo-sharing",
       "expo-font",
-      "expo-splash-screen"
+      "expo-splash-screen",
+      "@react-native-community/datetimepicker"
     ],
     "extra": {
       "eas": {

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { getErrorMessage } from '../../utils/errors';
 import { fonts } from '../../theme';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -16,7 +17,7 @@ export default function ForgotPasswordScreen({ navigation }: any) {
     if (!email) { setError('Please enter your email address'); return; }
     setError(''); setLoading(true);
     try { await authApi.forgotPassword(email); setSent(true); }
-    catch (err: any) { setError(err.response?.data?.detail ?? 'Something went wrong. Please try again.'); }
+    catch (err: any) { setError(getErrorMessage(err, 'Something went wrong. Please try again.')); }
     finally { setLoading(false); }
   };
 

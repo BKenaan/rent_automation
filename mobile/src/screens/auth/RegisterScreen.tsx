@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { getErrorMessage } from '../../utils/errors';
 import { fonts } from '../../theme';
 import {
   KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View,
@@ -32,7 +33,7 @@ export default function RegisterScreen({ navigation }: any) {
       await register({ username: form.username, full_name: form.full_name, email: form.email, password: form.password });
       await login(form.username, form.password);
     } catch (err: any) {
-      setError(err.response?.data?.detail ?? 'Registration failed. Please try again.');
+      setError(getErrorMessage(err, 'Registration failed. Please try again.'));
     } finally { setLoading(false); }
   };
 

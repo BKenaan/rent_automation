@@ -1,9 +1,11 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import { getErrorMessage } from '../utils/errors';
 import { fonts } from '../theme';
 import { Alert, FlatList, Modal, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { leasesApi, tenantsApi, unitsApi } from '../api';
 import { AlertBox, Badge, Button, Card, EmptyState, Input, Loader } from '../components/ui';
+import DateField from '../components/DateField';
 import { colors, font, radius, spacing } from '../theme';
 
 const FREQS = [
@@ -93,7 +95,7 @@ export default function LeasesScreen() {
       else await leasesApi.create(payload);
       setModal(false); load();
     } catch (e: any) {
-      setFormError(e.response?.data?.detail ?? 'Failed to save lease. Check the dates and values.');
+      setFormError(getErrorMessage(e, 'Failed to save lease. Check the dates and values.'));
     } finally { setSubmit(false); }
   };
 
@@ -187,8 +189,8 @@ export default function LeasesScreen() {
                     ))}
                 </View>
 
-                <Input label="Start Date" placeholder="YYYY-MM-DD" value={form.start_date} onChangeText={v => setForm({ ...form, start_date: v })} />
-                <Input label="End Date" placeholder="YYYY-MM-DD" value={form.end_date} onChangeText={v => setForm({ ...form, end_date: v })} />
+                <DateField label="Start Date" value={form.start_date} onChange={v => setForm({ ...form, start_date: v })} />
+                <DateField label="End Date" value={form.end_date} onChange={v => setForm({ ...form, end_date: v })} />
                 <Input label="Rent Amount" placeholder="0.00" keyboardType="decimal-pad" value={form.rent_amount} onChangeText={v => setForm({ ...form, rent_amount: v })} />
                 <Input label="Currency" placeholder="USD" autoCapitalize="characters" value={form.currency} onChangeText={v => setForm({ ...form, currency: v.toUpperCase() })} />
 

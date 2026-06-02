@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import { getErrorMessage } from '../utils/errors';
 import { fonts } from '../theme';
 import {
   Alert, FlatList, Modal, RefreshControl, StyleSheet, Text, TextInput, TouchableOpacity, View,
@@ -54,7 +55,7 @@ export default function TenantsScreen() {
       else await tenantsApi.create(form);
       setModal(false); load();
     } catch (e: any) {
-      setFormError(e.response?.data?.detail ?? 'Failed to save tenant.');
+      setFormError(getErrorMessage(e, 'Failed to save tenant.'));
     } finally { setSubmit(false); }
   };
 

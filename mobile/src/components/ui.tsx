@@ -129,14 +129,18 @@ export const RowItem: React.FC<{
 );
 
 // ── Alert box ─────────────────────────────────────────────────────────────────
-export const AlertBox: React.FC<{ message: string; variant?: 'error' | 'success' }> = ({
+export const AlertBox: React.FC<{ message: unknown; variant?: 'error' | 'success' }> = ({
   message, variant = 'error',
-}) => (
-  <View style={[styles.alertBox, { backgroundColor: variant === 'error' ? colors.redDim : colors.greenDim,
-    borderColor: variant === 'error' ? colors.red : colors.green }]}>
-    <Text style={[styles.alertText, { color: variant === 'error' ? colors.red : colors.green }]}>{message}</Text>
-  </View>
-);
+}) => {
+  // Defensive: never render a non-string (an object/array would crash RN)
+  const text = typeof message === 'string' ? message : JSON.stringify(message);
+  return (
+    <View style={[styles.alertBox, { backgroundColor: variant === 'error' ? colors.redDim : colors.greenDim,
+      borderColor: variant === 'error' ? colors.red : colors.green }]}>
+      <Text style={[styles.alertText, { color: variant === 'error' ? colors.red : colors.green }]}>{text}</Text>
+    </View>
+  );
+};
 
 // ── Metric card ───────────────────────────────────────────────────────────────
 export const MetricCard: React.FC<{ label: string; value: string; accent?: string }> = ({

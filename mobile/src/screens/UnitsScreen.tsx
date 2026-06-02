@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import { getErrorMessage } from '../utils/errors';
 import { fonts } from '../theme';
 import { Alert, FlatList, Modal, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -51,7 +52,7 @@ export default function UnitsScreen() {
       if (editing) await unitsApi.update(editing.id, payload);
       else await unitsApi.create(payload);
       setModal(false); load();
-    } catch (e: any) { setFormError(e.response?.data?.detail ?? 'Failed to save unit. Check the unit code is unique.'); }
+    } catch (e: any) { setFormError(getErrorMessage(e, 'Failed to save unit. Check the unit code is unique.')); }
     finally { setSubmit(false); }
   };
 
