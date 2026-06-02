@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate, Link } from 'react-ro
 import Layout from './components/Layout';
 import Landing from './pages/Landing';
 import Privacy from './pages/Privacy';
+import DeleteAccount from './pages/DeleteAccount';
 import Dashboard from './pages/Dashboard';
 import Tenants from './pages/Tenants';
 import Units from './pages/Units';
@@ -44,6 +45,7 @@ function App() {
           {/* Public landing */}
           <Route path="/" element={<Landing />} />
           <Route path="/privacy" element={<Privacy />} />
+          <Route path="/delete-account" element={<DeleteAccount />} />
 
           {/* Auth pages — redirect to dashboard if already logged in */}
           <Route path="/login"          element={<PublicRoute><Login /></PublicRoute>} />
