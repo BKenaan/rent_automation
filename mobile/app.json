@@ -8,7 +8,8 @@
     "userInterfaceStyle": "dark",
     "scheme": "rentalman",
     "splash": {
-      "backgroundColor": "#09090b",
+      "image": "./assets/splash-icon.png",
+      "backgroundColor": "#1B2B4E",
       "resizeMode": "contain"
     },
     "ios": {

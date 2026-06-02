@@ -15,18 +15,14 @@ const Logo = ({ size = 32, showName = false, nameSize = '1rem', className = '' }
             xmlns="http://www.w3.org/2000/svg"
             aria-label="RentalMan logo"
         >
-            <rect width="36" height="36" rx="9" fill="#8b5cf6" />
-            <path
-                d="M5 18L18 7L31 18"
-                stroke="white"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-            />
-            <rect x="8" y="17" width="20" height="13" rx="1.5" fill="white" fillOpacity="0.95" />
-            <rect x="11" y="20" width="5" height="4" rx="1" fill="#8b5cf6" />
-            <rect x="20" y="20" width="5" height="4" rx="1" fill="#8b5cf6" />
-            <rect x="14" y="24" width="8" height="6" rx="1" fill="#8b5cf6" fillOpacity="0.55" />
+            <rect width="36" height="36" rx="9" fill="#1B2B4E" />
+            <g fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="6.3,14.4 18,6.3 29.7,14.4" />
+                <path d="M24 10.6 V7" />
+                <path d="M9 13.6 V29.2 H27 V13.6" />
+            </g>
+            <circle cx="18" cy="18" r="3" fill="#8b5cf6" />
+            <polygon points="16.65,19 19.35,19 21,25.3 15,25.3" fill="#8b5cf6" />
         </svg>
         {showName && (
             <span style={{
