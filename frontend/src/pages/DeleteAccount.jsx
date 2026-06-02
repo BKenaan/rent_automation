@@ -41,9 +41,25 @@ const DeleteAccount = () => (
                 This page explains how to make the request and what is deleted.
             </p>
 
-            <Section title="How to request deletion">
+            <Section title="Delete specific data (without closing your account)">
                 <p style={{ marginBottom: 12 }}>
-                    Send an email to{' '}
+                    You don't have to delete your whole account to remove data. Inside the RentalMan app you
+                    can delete individual records at any time — tenants, units, leases, payments, and expenses —
+                    using the <strong>Delete</strong> option on each item. Deleting a record removes it
+                    permanently from our servers.
+                </p>
+                <p>
+                    You can also email{' '}
+                    <a href={`mailto:${CONTACT_EMAIL}?subject=Delete%20specific%20data`} style={{ color: 'var(--accent-hover)', fontWeight: 600 }}>
+                        {CONTACT_EMAIL}
+                    </a>{' '}
+                    to request deletion of specific data while keeping your account active.
+                </p>
+            </Section>
+
+            <Section title="Delete your entire account">
+                <p style={{ marginBottom: 12 }}>
+                    To delete your whole account and all associated data, send an email to{' '}
                     <a href={`mailto:${CONTACT_EMAIL}?subject=Delete%20my%20account`} style={{ color: 'var(--accent-hover)', fontWeight: 600 }}>
                         {CONTACT_EMAIL}
                     </a>{' '}
