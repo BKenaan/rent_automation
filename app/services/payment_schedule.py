@@ -6,6 +6,24 @@ from app.models.lease import Lease
 from app.models.payment_schedule import PaymentSchedule
 from app.models.enums import PaymentStatus
 
+def _rent_for_date(base_amount, rent_changes, due_date) -> float:
+    """
+    Return the rent in effect on `due_date`, given a base amount and an optional
+    list of escalation steps [{"effective_date": "YYYY-MM-DD", "amount": n}, ...].
+    ISO date strings compare correctly lexicographically, so no parsing needed.
+    """
+    amount = float(base_amount)
+    if rent_changes:
+        ds = due_date.isoformat() if hasattr(due_date, "isoformat") else str(due_date)
+        applicable = sorted(
+            (rc for rc in rent_changes if str(rc.get("effective_date")) <= ds),
+            key=lambda rc: str(rc.get("effective_date")),
+        )
+        if applicable:
+            amount = float(applicable[-1].get("amount"))
+    return amount
+
+
 class PaymentScheduleService:
     @staticmethod
     def generate_schedules(lease: Lease) -> List[PaymentSchedule]:
@@ -19,7 +37,7 @@ class PaymentScheduleService:
             schedule = PaymentSchedule(
                 lease_id=lease.id,
                 due_date=current_due_date,
-                amount=lease.rent_amount,
+                amount=_rent_for_date(lease.rent_amount, lease.rent_changes, current_due_date),
                 status=PaymentStatus.PENDING
             )
             schedules.append(schedule)
@@ -64,7 +82,7 @@ class PaymentScheduleService:
                 schedule = PaymentSchedule(
                     lease_id=lease.id,
                     due_date=current_due_date,
-                    amount=lease.rent_amount,
+                    amount=_rent_for_date(lease.rent_amount, lease.rent_changes, current_due_date),
                     status=PaymentStatus.PENDING
                 )
                 db.add(schedule)

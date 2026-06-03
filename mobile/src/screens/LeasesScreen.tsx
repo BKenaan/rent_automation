@@ -19,6 +19,7 @@ const FREQS = [
 const BLANK = {
   tenant_id: '', unit_id: '', start_date: '', end_date: '',
   rent_amount: '', currency: 'USD', payment_frequency_months: '1', deposit_amount: '0',
+  rent_changes: [] as { effective_date: string; amount: string }[],
 };
 
 function leaseStatus(l: any): { label: string; variant: 'green' | 'yellow' | 'red' } {
@@ -58,7 +59,7 @@ export default function LeasesScreen() {
     return u ? `${u.name} (${u.unit_code})` : `Unit #${id}`;
   };
 
-  const openCreate = () => { setEditing(null); setForm(BLANK); setFormError(''); setModal(true); };
+  const openCreate = () => { setEditing(null); setForm({ ...BLANK, rent_changes: [] }); setFormError(''); setModal(true); };
   const openEdit   = (l: any) => {
     setEditing(l);
     setForm({
@@ -67,9 +68,17 @@ export default function LeasesScreen() {
       rent_amount: String(l.rent_amount), currency: l.currency || 'USD',
       payment_frequency_months: String(l.payment_frequency_months),
       deposit_amount: String(l.deposit_amount ?? 0),
+      rent_changes: Array.isArray(l.rent_changes)
+        ? l.rent_changes.map((rc: any) => ({ effective_date: rc.effective_date, amount: String(rc.amount) }))
+        : [],
     });
     setFormError(''); setModal(true);
   };
+
+  const addRentChange    = () => setForm(f => ({ ...f, rent_changes: [...f.rent_changes, { effective_date: '', amount: '' }] }));
+  const updateRentChange = (i: number, key: 'effective_date' | 'amount', val: string) =>
+    setForm(f => { const rc = [...f.rent_changes]; rc[i] = { ...rc[i], [key]: val }; return { ...f, rent_changes: rc }; });
+  const removeRentChange = (i: number) => setForm(f => ({ ...f, rent_changes: f.rent_changes.filter((_, idx) => idx !== i) }));
 
   const handleDelete = (id: number) => Alert.alert('Delete lease', 'This will also remove all associated payment schedules. Continue?', [
     { text: 'Cancel', style: 'cancel' },
@@ -91,6 +100,9 @@ export default function LeasesScreen() {
         rent_amount: Number(form.rent_amount), currency: form.currency || 'USD',
         payment_frequency_months: Number(form.payment_frequency_months),
         deposit_amount: Number(form.deposit_amount || 0),
+        rent_changes: form.rent_changes
+          .filter(rc => rc.effective_date && rc.amount !== '' && !isNaN(Number(rc.amount)))
+          .map(rc => ({ effective_date: rc.effective_date, amount: Number(rc.amount) })),
       };
       if (editing) await leasesApi.update(editing.id, payload);
       else await leasesApi.create(payload);
@@ -206,6 +218,28 @@ export default function LeasesScreen() {
 
                 <Input label="Deposit Amount" placeholder="0.00" keyboardType="decimal-pad" value={form.deposit_amount} onChangeText={v => setForm({ ...form, deposit_amount: v })} />
 
+                {/* Rent increases (escalation) */}
+                <View style={styles.rcHeader}>
+                  <Text style={styles.selectLabel}>Scheduled Rent Increases (optional)</Text>
+                  <TouchableOpacity onPress={addRentChange} style={styles.rcAddBtn}>
+                    <Text style={styles.rcAddText}>+ Add</Text>
+                  </TouchableOpacity>
+                </View>
+                <Text style={styles.rcHint}>From each date, rent becomes the new amount. Future unpaid schedules update automatically.</Text>
+                {form.rent_changes.map((rc, i) => (
+                  <View key={i} style={styles.rcRow}>
+                    <View style={{ flex: 1 }}>
+                      <DateField value={rc.effective_date} onChange={v => updateRentChange(i, 'effective_date', v)} placeholder="Effective date" />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Input placeholder="New rent" keyboardType="decimal-pad" value={rc.amount} onChangeText={v => updateRentChange(i, 'amount', v)} />
+                    </View>
+                    <TouchableOpacity onPress={() => removeRentChange(i)} style={styles.rcRemove}>
+                      <Text style={styles.rcRemoveText}>✕</Text>
+                    </TouchableOpacity>
+                  </View>
+                ))}
+
                 <Button label={submitting ? 'Saving…' : editing ? 'Update Lease' : 'Create Lease'} loading={submitting} size="lg" onPress={handleSubmit} style={{ marginTop: spacing.sm }} />
               </View>
             )}
@@ -247,4 +281,11 @@ const styles = StyleSheet.create({
   chipText:    { fontSize: font.sm, color: colors.text2 },
   chipActiveText: { color: colors.accentHover, fontFamily: fonts.semibold },
   hint:        { fontSize: font.sm, color: colors.text3, fontStyle: 'italic' },
+  rcHeader:    { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 },
+  rcAddBtn:    { paddingVertical: 4, paddingHorizontal: 10, borderRadius: radius.md, backgroundColor: colors.accentDim, borderWidth: 1, borderColor: colors.accentBorder },
+  rcAddText:   { color: colors.accentHover, fontFamily: fonts.semibold, fontSize: font.xs },
+  rcHint:      { fontSize: font.xs, color: colors.text3, marginBottom: spacing.sm },
+  rcRow:       { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm },
+  rcRemove:    { width: 36, height: 42, alignItems: 'center', justifyContent: 'center' },
+  rcRemoveText:{ color: colors.red, fontSize: font.lg, fontFamily: fonts.bold },
 });

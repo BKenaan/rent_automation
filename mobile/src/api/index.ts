@@ -72,6 +72,7 @@ export const paymentsApi = {
   getAll:  (skip = 0, limit = 50, status?: string) =>
     api.get('/payments/', { params: { skip, limit, ...(status ? { status } : {}) } }),
   record:  (scheduleId: number, data: object)      => api.post(`/payments/${scheduleId}/record`, data),
+  revert:  (scheduleId: number)                    => api.post(`/payments/${scheduleId}/revert`),
 };
 
 // ── Expenses ──────────────────────────────────────────────────────────────────

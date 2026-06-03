@@ -81,6 +81,7 @@ export const leasesApi = {
 export const paymentsApi = {
     getAll:  (status, skip = 0, limit = 50) => api.get('/payments/', { params: { status, skip, limit } }),
     record:  (scheduleId, data)             => api.post(`/payments/${scheduleId}/record`, data),
+    revert:  (scheduleId)                   => api.post(`/payments/${scheduleId}/revert`),
     getById: (scheduleId)                   => api.get(`/payments/${scheduleId}`),
 };
 

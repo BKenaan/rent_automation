@@ -23,6 +23,21 @@ def _lease_belongs_to_user(db: Session, lease_id: int, user_id: int) -> LeaseMod
     ).first()
 
 
+def _serialize_rent_changes(rc_list):
+    """Convert rent_changes (list of dicts with date objects) to JSON-safe form."""
+    if not rc_list:
+        return rc_list
+    out = []
+    for rc in rc_list:
+        ed = rc.get("effective_date")
+        out.append({
+            "effective_date": ed.isoformat() if hasattr(ed, "isoformat") else str(ed),
+            "amount": float(rc.get("amount")),
+        })
+    # keep them sorted by date for predictable application
+    return sorted(out, key=lambda r: r["effective_date"])
+
+
 @router.post("/", response_model=Lease, status_code=status.HTTP_201_CREATED)
 def create_lease(
     lease: LeaseCreate,
@@ -38,7 +53,9 @@ def create_lease(
     if not tenant or not unit:
         raise HTTPException(status_code=404, detail="Tenant or unit not found or not owned by you")
 
-    db_lease = LeaseModel(**lease.model_dump())
+    data = lease.model_dump()
+    data["rent_changes"] = _serialize_rent_changes(data.get("rent_changes"))
+    db_lease = LeaseModel(**data)
     db.add(db_lease)
     db.commit()
     db.refresh(db_lease)
@@ -94,11 +111,13 @@ def update_lease(
         raise HTTPException(status_code=404, detail="Lease not found")
 
     update_data = lease.model_dump(exclude_unset=True)
+    if "rent_changes" in update_data:
+        update_data["rent_changes"] = _serialize_rent_changes(update_data["rent_changes"])
     for key, value in update_data.items():
         setattr(db_lease, key, value)
     db.commit()
 
-    if any(k in update_data for k in ["rent_amount", "start_date", "end_date", "payment_frequency_months"]):
+    if any(k in update_data for k in ["rent_amount", "start_date", "end_date", "payment_frequency_months", "rent_changes"]):
         schedule_service.regenerate_schedules(db, db_lease)
 
     db.refresh(db_lease)

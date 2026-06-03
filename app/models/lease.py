@@ -21,6 +21,8 @@ class Lease(Base):
     
     reminder_days_before: Mapped[Optional[Any]] = mapped_column(JSON, nullable=True) # e.g., [1, 3, 5]
     overdue_days_after: Mapped[Optional[Any]] = mapped_column(JSON, nullable=True) # e.g., [1, 3, 7]
+    # Rent escalation steps: [{"effective_date": "2026-01-01", "amount": 1200.0}, ...]
+    rent_changes: Mapped[Optional[Any]] = mapped_column(JSON, nullable=True)
     
     status: Mapped[LeaseStatus] = mapped_column(SQLEnum(LeaseStatus), default=LeaseStatus.ACTIVE)
     created_at: Mapped[datetime] = mapped_column(

@@ -2,7 +2,7 @@ import logging
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session, joinedload
 from typing import List, Optional
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from app.db.session import get_db
 from app.models.payment_schedule import PaymentSchedule
 from app.models.lease import Lease
@@ -85,6 +85,31 @@ def record_payment(
         "Payment recorded: schedule %s, method %s (user %s)",
         schedule_id, payment.payment_method, current_user.id,
     )
+    return db_schedule
+
+
+@router.post("/{schedule_id}/revert", response_model=PaymentScheduleSchema)
+def revert_payment(
+    schedule_id: int,
+    db: Session = Depends(get_db),
+    current_user: UserModel = Depends(get_current_user),
+):
+    """Undo a recorded payment — clears the payment details and restores the
+    schedule to pending (or overdue if its due date has passed)."""
+    db_schedule = _payment_schedule_belongs_to_user(db, schedule_id, current_user.id)
+    if db_schedule is None:
+        raise HTTPException(status_code=404, detail="Payment schedule not found")
+    if db_schedule.status != PaymentStatus.PAID:
+        raise HTTPException(status_code=400, detail="This payment is not marked as paid.")
+
+    db_schedule.status = PaymentStatus.OVERDUE if db_schedule.due_date < date.today() else PaymentStatus.PENDING
+    db_schedule.paid_at = None
+    db_schedule.payment_method = None
+    db_schedule.reference = None
+    db_schedule.notes = None
+    db.commit()
+    db.refresh(db_schedule)
+    logger.info("Payment reverted: schedule %s (user %s)", schedule_id, current_user.id)
     return db_schedule
 
 

@@ -5,7 +5,7 @@ import Modal from '../components/Modal';
 import { formatDate } from '../utils/dateUtils';
 
 const asArray = (x) => (Array.isArray(x) ? x : []);
-const BLANK = { tenant_id: '', unit_id: '', start_date: '', end_date: '', rent_amount: '', currency: 'USD', payment_frequency_months: '1', deposit_amount: '0' };
+const BLANK = { tenant_id: '', unit_id: '', start_date: '', end_date: '', rent_amount: '', currency: 'USD', payment_frequency_months: '1', deposit_amount: '0', rent_changes: [] };
 
 const freqLabel = { '1': 'Monthly', '3': 'Quarterly', '6': 'Biannually', '12': 'Yearly' };
 
@@ -37,7 +37,7 @@ const Leases = () => {
 
     useEffect(() => { fetchLeases(); fetchOptions(); }, []);
 
-    const openCreate = () => { setEditing(null); setFormData(BLANK); setModal(true); };
+    const openCreate = () => { setEditing(null); setFormData({ ...BLANK, rent_changes: [] }); setModal(true); };
     const openEdit   = (l) => {
         setEditing(l);
         setFormData({
@@ -46,9 +46,14 @@ const Leases = () => {
             rent_amount: String(l.rent_amount), currency: l.currency || 'USD',
             payment_frequency_months: String(l.payment_frequency_months),
             deposit_amount: String(l.deposit_amount || 0),
+            rent_changes: asArray(l.rent_changes).map(rc => ({ effective_date: rc.effective_date, amount: String(rc.amount) })),
         });
         setModal(true);
     };
+
+    const addRentChange    = () => setFormData(f => ({ ...f, rent_changes: [...asArray(f.rent_changes), { effective_date: '', amount: '' }] }));
+    const updateRentChange = (i, key, val) => setFormData(f => { const rc = [...asArray(f.rent_changes)]; rc[i] = { ...rc[i], [key]: val }; return { ...f, rent_changes: rc }; });
+    const removeRentChange = (i) => setFormData(f => ({ ...f, rent_changes: asArray(f.rent_changes).filter((_, idx) => idx !== i) }));
 
     const handleDelete = async (id) => {
         if (!window.confirm('Delete this lease? All associated payment schedules will also be removed.')) return;
@@ -66,6 +71,9 @@ const Leases = () => {
                 rent_amount: Number(formData.rent_amount), currency: formData.currency || 'USD',
                 payment_frequency_months: Number(formData.payment_frequency_months),
                 deposit_amount: Number(formData.deposit_amount || 0),
+                rent_changes: asArray(formData.rent_changes)
+                    .filter(rc => rc.effective_date && rc.amount !== '' && !isNaN(Number(rc.amount)))
+                    .map(rc => ({ effective_date: rc.effective_date, amount: Number(rc.amount) })),
             };
             if (editingLease) await leasesApi.update(editingLease.id, payload);
             else await leasesApi.create(payload);
@@ -153,6 +161,29 @@ const Leases = () => {
                             <input type="number" min="0" step="0.01" className="form-input" value={formData.deposit_amount} onChange={field('deposit_amount')} />
                         </div>
                     </div>
+
+                    {/* Rent increases (escalation) */}
+                    <div className="form-group">
+                        <div className="flex-center" style={{ justifyContent: 'space-between' }}>
+                            <label className="form-label" style={{ marginBottom: 0 }}>Scheduled Rent Increases (optional)</label>
+                            <button type="button" className="btn btn-ghost" style={{ padding: '4px 10px', fontSize: '0.8rem' }} onClick={addRentChange}>
+                                <Plus size={13} /> Add
+                            </button>
+                        </div>
+                        <p className="text-muted fs-xs" style={{ marginTop: 2 }}>
+                            From each date, rent becomes the new amount. Future unpaid schedules update automatically.
+                        </p>
+                        {asArray(formData.rent_changes).map((rc, i) => (
+                            <div key={i} className="form-row" style={{ marginTop: 8, alignItems: 'center' }}>
+                                <input type="date" className="form-input" value={rc.effective_date} onChange={(e) => updateRentChange(i, 'effective_date', e.target.value)} />
+                                <input type="number" min="0" step="0.01" className="form-input" placeholder="New rent" value={rc.amount} onChange={(e) => updateRentChange(i, 'amount', e.target.value)} />
+                                <button type="button" className="btn btn-ghost btn-icon" style={{ flex: '0 0 auto', color: 'var(--red)' }} onClick={() => removeRentChange(i)} title="Remove">
+                                    <Trash2 size={15} />
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+
                     <button type="submit" className="btn btn-primary btn-lg w-full" disabled={submitting}>
                         {submitting ? 'Saving…' : editingLease ? 'Update Lease' : 'Create Lease'}
                     </button>

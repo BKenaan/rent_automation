@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { CreditCard, Filter, CheckCircle, Clock, AlertCircle, PlusCircle } from 'lucide-react';
+import { CreditCard, Filter, CheckCircle, Clock, AlertCircle, PlusCircle, RotateCcw } from 'lucide-react';
 import { paymentsApi } from '../api';
 import Modal from '../components/Modal';
 import { formatDate } from '../utils/dateUtils';
@@ -47,6 +47,16 @@ const Payments = () => {
         } catch (err) {
             alert(err.response?.data?.detail || 'Failed to record payment.');
         } finally { setSubmitting(false); }
+    };
+
+    const handleRevert = async (payment) => {
+        if (!window.confirm(`Undo this recorded payment for ${payment.lease?.tenant?.full_name || 'this tenant'}? It will be marked unpaid again.`)) return;
+        try {
+            await paymentsApi.revert(payment.id);
+            fetchPayments();
+        } catch (err) {
+            alert(err.response?.data?.detail || 'Failed to undo payment.');
+        }
     };
 
     const tenantNames = [...new Set(payments.map(p => p.lease?.tenant?.full_name).filter(Boolean))];
@@ -167,9 +177,13 @@ const Payments = () => {
                                         )}
                                     </td>
                                     <td style={{ textAlign: 'right' }}>
-                                        {p.status !== 'paid' && (
+                                        {p.status !== 'paid' ? (
                                             <button className="btn btn-primary" style={{ padding: '5px 12px', fontSize: '0.8rem' }} onClick={() => openRecord(p)}>
                                                 <PlusCircle size={13} /> Record
+                                            </button>
+                                        ) : (
+                                            <button className="btn btn-ghost" style={{ padding: '5px 12px', fontSize: '0.8rem', color: 'var(--text-2)' }} onClick={() => handleRevert(p)} title="Undo this payment">
+                                                <RotateCcw size={13} /> Undo
                                             </button>
                                         )}
                                     </td>

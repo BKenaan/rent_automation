@@ -42,6 +42,11 @@ class LeaseMinimal(BaseModel):
 class PaymentScheduleWithDetails(PaymentSchedule):
     lease: LeaseMinimal
 
+class RentChange(BaseModel):
+    """A scheduled rent increase: from effective_date, rent becomes `amount`."""
+    effective_date: date
+    amount: float = Field(..., gt=0)
+
 class LeaseBase(BaseModel):
     tenant_id: int
     unit_id: int
@@ -53,6 +58,7 @@ class LeaseBase(BaseModel):
     deposit_amount: float = Field(0.0, ge=0)
     reminder_days_before: Optional[List[int]] = None
     overdue_days_after: Optional[List[int]] = None
+    rent_changes: Optional[List[RentChange]] = None
     status: LeaseStatus = LeaseStatus.ACTIVE
 
     @field_validator("end_date")
@@ -83,6 +89,7 @@ class LeaseUpdate(BaseModel):
     deposit_amount: Optional[float] = Field(None, ge=0)
     reminder_days_before: Optional[List[int]] = None
     overdue_days_after: Optional[List[int]] = None
+    rent_changes: Optional[List[RentChange]] = None
     status: Optional[LeaseStatus] = None
 
     @field_validator("payment_frequency_months")

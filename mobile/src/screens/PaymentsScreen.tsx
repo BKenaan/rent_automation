@@ -48,6 +48,20 @@ export default function PaymentsScreen() {
     finally { setSubmit(false); }
   };
 
+  const handleRevert = (p: any) => {
+    Alert.alert(
+      'Undo payment',
+      `Mark this payment for ${p.lease?.tenant?.full_name ?? 'this tenant'} as unpaid again?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Undo', style: 'destructive', onPress: async () => {
+          try { await paymentsApi.revert(p.id); load(); }
+          catch (e: any) { Alert.alert('Error', getErrorMessage(e, 'Failed to undo payment.')); }
+        }},
+      ],
+    );
+  };
+
   const summary = { paid: 0, pending: 0, overdue: 0 };
   payments.forEach((p: any) => { if ((summary as any)[p.status] !== undefined) (summary as any)[p.status]++; });
 
@@ -85,8 +99,13 @@ export default function PaymentsScreen() {
                 <Text style={styles.recordBtnText}>Record Payment</Text>
               </TouchableOpacity>
             )}
-            {item.status === 'paid' && item.payment_method && (
-              <Text style={styles.via}>via {item.payment_method}</Text>
+            {item.status === 'paid' && (
+              <View style={styles.paidRow}>
+                {item.payment_method ? <Text style={styles.via}>via {item.payment_method}</Text> : <View />}
+                <TouchableOpacity style={styles.undoBtn} onPress={() => handleRevert(item)}>
+                  <Text style={styles.undoText}>↺ Undo</Text>
+                </TouchableOpacity>
+              </View>
             )}
           </Card>
         )}
@@ -145,7 +164,10 @@ const styles = StyleSheet.create({
   amount:  { fontSize: font.md, fontFamily: fonts.bold, color: colors.text, marginBottom: 4 },
   recordBtn:     { marginTop: spacing.md, backgroundColor: colors.accentDim, borderRadius: radius.md, paddingVertical: spacing.sm, alignItems: 'center', borderWidth: 1, borderColor: colors.accentBorder },
   recordBtnText: { color: colors.accentHover, fontFamily: fonts.semibold, fontSize: font.sm },
-  via:           { marginTop: spacing.sm, fontSize: font.xs, color: colors.text3 },
+  via:           { fontSize: font.xs, color: colors.text3 },
+  paidRow:       { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: spacing.sm },
+  undoBtn:       { paddingVertical: 5, paddingHorizontal: 12, borderRadius: radius.md, backgroundColor: colors.surface2, borderWidth: 1, borderColor: colors.borderMd },
+  undoText:      { color: colors.text2, fontFamily: fonts.medium, fontSize: font.xs },
   modalSafe:     { flex: 1, backgroundColor: colors.surface1 },
   modalHeader:   { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: spacing.lg, borderBottomWidth: 1, borderBottomColor: colors.border },
   modalTitle:    { fontSize: font.lg, fontFamily: fonts.bold, color: colors.text },
