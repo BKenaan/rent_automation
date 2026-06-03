@@ -4,17 +4,20 @@ import { fonts } from '../theme';
 import { Alert, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { tenantsApi, unitsApi, paymentsApi, leasesApi, expensesApi } from '../api';
+import { Settings as SettingsIcon } from 'lucide-react-native';
 import { useAuth } from '../context/AuthContext';
 import { Card, Loader, MetricCard, SectionTitle } from '../components/ui';
-import { colors, font, spacing } from '../theme';
+import SettingsModal from '../components/SettingsModal';
+import { colors, font, radius, spacing } from '../theme';
 
 const fmt = (v: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(v);
 const asArray = (x: any) => (Array.isArray(x) ? x : []);
 
 export default function DashboardScreen() {
-  const { displayName, logout } = useAuth();
+  const { displayName } = useAuth();
   const [loading, setLoading]     = useState(true);
   const [refreshing, setRefresh]  = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const [stats, setStats] = useState({ gross: 0, expenses: 0, net: 0, roi: '0', tenants: 0, units: 0, occupancy: 0 });
   const [upcoming, setUpcoming]   = useState<any[]>([]);
 
@@ -67,11 +70,8 @@ export default function DashboardScreen() {
             <Text style={styles.greeting}>Hello, {displayName} 👋</Text>
             <Text style={styles.subGreeting}>Financial Overview</Text>
           </View>
-          <TouchableOpacity onPress={() => Alert.alert('Sign out', 'Are you sure?', [
-            { text: 'Cancel', style: 'cancel' },
-            { text: 'Sign out', style: 'destructive', onPress: logout },
-          ])} style={styles.logoutBtn}>
-            <Text style={styles.logoutText}>Sign out</Text>
+          <TouchableOpacity onPress={() => setShowSettings(true)} style={styles.gearBtn}>
+            <SettingsIcon size={20} color={colors.text2} />
           </TouchableOpacity>
         </View>
 
@@ -120,6 +120,8 @@ export default function DashboardScreen() {
           ))}
         </Card>
       </ScrollView>
+
+      <SettingsModal visible={showSettings} onClose={() => setShowSettings(false)} />
     </SafeAreaView>
   );
 }
@@ -130,8 +132,7 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: spacing.xl },
   greeting:    { fontSize: font.xl, fontFamily: fonts.bold, color: colors.text },
   subGreeting: { fontSize: font.sm, color: colors.text3, marginTop: 2 },
-  logoutBtn:   { backgroundColor: colors.redDim, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6 },
-  logoutText:  { color: colors.red, fontSize: font.xs, fontFamily: fonts.semibold },
+  gearBtn:     { padding: 8, borderRadius: radius.md, backgroundColor: colors.surface2, borderWidth: 1, borderColor: colors.border },
   metricsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginBottom: spacing.md },
   section:     { marginBottom: spacing.md },
   occupancyRow:{ flexDirection: 'row', justifyContent: 'space-around', marginTop: spacing.sm },

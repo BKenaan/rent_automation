@@ -39,7 +39,13 @@
       "expo-sharing",
       "expo-font",
       "expo-splash-screen",
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      [
+        "expo-notifications",
+        {
+          "color": "#8b5cf6"
+        }
+      ]
     ],
     "extra": {
       "eas": {

@@ -7,6 +7,7 @@ import {
     FileText,
     CreditCard,
     Receipt,
+    Settings as SettingsIcon,
 } from 'lucide-react';
 import Logo from './Logo';
 
@@ -17,6 +18,7 @@ const nav = [
     { icon: FileText,        label: 'Leases',     path: '/leases' },
     { icon: CreditCard,      label: 'Payments',   path: '/payments' },
     { icon: Receipt,         label: 'Expenses',   path: '/expenses' },
+    { icon: SettingsIcon,    label: 'Settings',   path: '/settings' },
 ];
 
 const Sidebar = () => (

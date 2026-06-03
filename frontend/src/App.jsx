@@ -10,6 +10,7 @@ import Units from './pages/Units';
 import Payments from './pages/Payments';
 import Leases from './pages/Leases';
 import Expenses from './pages/Expenses';
+import Settings from './pages/Settings';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
@@ -60,6 +61,7 @@ function App() {
           <Route path="/leases"    element={<ProtectedRoute><Leases /></ProtectedRoute>} />
           <Route path="/payments"  element={<ProtectedRoute><Payments /></ProtectedRoute>} />
           <Route path="/expenses"  element={<ProtectedRoute><Expenses /></ProtectedRoute>} />
+          <Route path="/settings"  element={<ProtectedRoute><Settings /></ProtectedRoute>} />
 
           <Route path="*" element={<ProtectedRoute><NotFound /></ProtectedRoute>} />
         </Routes>

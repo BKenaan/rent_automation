@@ -36,9 +36,12 @@ export const authApi = {
     form.append('password', password);
     return api.post('/auth/login', form, { headers: { 'Content-Type': 'multipart/form-data' } });
   },
-  register:       (data: object)          => api.post('/auth/register', data),
-  me:             ()                      => api.get('/auth/me'),
-  forgotPassword: (email: string)         => api.post('/auth/forgot-password', { email }),
+  register:        (data: object)          => api.post('/auth/register', data),
+  me:              ()                      => api.get('/auth/me'),
+  forgotPassword:  (email: string)         => api.post('/auth/forgot-password', { email }),
+  updatePreferences: (prefs: { notify_email: boolean; notify_push: boolean }) =>
+    api.patch('/auth/me/preferences', prefs),
+  registerPushToken: (push_token: string)  => api.post('/auth/push-token', { push_token }),
 };
 
 // ── Tenants ───────────────────────────────────────────────────────────────────

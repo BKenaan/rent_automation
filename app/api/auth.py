@@ -6,7 +6,10 @@ from sqlalchemy.orm import Session
 from app.db.session import get_db
 from app.models.user import User as UserModel
 from app.models.enums import NotificationChannel
-from app.schemas.user import User, UserCreate, ForgotPasswordRequest, ResetPasswordRequest
+from app.schemas.user import (
+    User, UserCreate, ForgotPasswordRequest, ResetPasswordRequest,
+    NotificationPrefs, PushTokenIn,
+)
 from app.schemas.token import Token
 from app.core import security
 from app.core.config import settings
@@ -77,6 +80,34 @@ def login(request: Request, db: Session = Depends(get_db), form_data: OAuth2Pass
 def get_me(current_user: UserModel = Depends(get_current_user)):
     """Return the currently authenticated user's profile."""
     return current_user
+
+
+@router.patch("/me/preferences", response_model=User)
+def update_preferences(
+    prefs: NotificationPrefs,
+    db: Session = Depends(get_db),
+    current_user: UserModel = Depends(get_current_user),
+):
+    """Update the user's notification channel preferences (email / push)."""
+    current_user.notify_email = prefs.notify_email
+    current_user.notify_push = prefs.notify_push
+    db.add(current_user)
+    db.commit()
+    db.refresh(current_user)
+    return current_user
+
+
+@router.post("/push-token")
+def register_push_token(
+    body: PushTokenIn,
+    db: Session = Depends(get_db),
+    current_user: UserModel = Depends(get_current_user),
+):
+    """Store the device's Expo push token for this user."""
+    current_user.push_token = body.push_token
+    db.add(current_user)
+    db.commit()
+    return {"message": "Push token registered"}
 
 
 @router.post("/forgot-password")

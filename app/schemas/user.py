@@ -27,12 +27,21 @@ class UserUpdate(UserBase):
 class UserInDBBase(UserBase):
     id: int
     created_at: datetime
+    notify_email: bool = True
+    notify_push: bool = True
 
     class Config:
         from_attributes = True
 
 class User(UserInDBBase):
     pass
+
+class NotificationPrefs(BaseModel):
+    notify_email: bool
+    notify_push: bool
+
+class PushTokenIn(BaseModel):
+    push_token: str
 
 class UserInDB(UserInDBBase):
     hashed_password: str

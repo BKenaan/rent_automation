@@ -14,6 +14,12 @@ class User(Base):
     hashed_password: Mapped[str] = mapped_column(String(255))
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     is_superuser: Mapped[bool] = mapped_column(Boolean, default=False)
+
+    # Notification preferences + Expo push token
+    notify_email: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true")
+    notify_push: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true")
+    push_token: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
     )

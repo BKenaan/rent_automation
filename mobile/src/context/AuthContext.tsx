@@ -1,12 +1,15 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import * as SecureStore from 'expo-secure-store';
 import { authApi } from '../api';
+import { registerForPushNotifications } from '../utils/notifications';
 
 interface UserProfile {
   id: number;
   username: string;
   email: string;
   full_name: string | null;
+  notify_email: boolean;
+  notify_push: boolean;
 }
 
 interface AuthState {
@@ -17,6 +20,7 @@ interface AuthState {
   login: (username: string, password: string) => Promise<void>;
   register: (data: object) => Promise<void>;
   logout: () => Promise<void>;
+  updatePreferences: (prefs: { notify_email: boolean; notify_push: boolean }) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthState | null>(null);
@@ -53,6 +57,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setToken(stored);
           if (storedUser) setUser(JSON.parse(storedUser));
           refreshProfile();
+          registerForPushNotifications(); // silent if already granted
         } else {
           await SecureStore.deleteItemAsync('token');
           await SecureStore.deleteItemAsync('user');
@@ -68,6 +73,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await SecureStore.setItemAsync('token', newToken);
     setToken(newToken);
     await refreshProfile();
+    registerForPushNotifications(); // request permission + register token
   }, [refreshProfile]);
 
   const register = useCallback(async (data: object) => {
@@ -81,10 +87,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(null);
   }, []);
 
+  const updatePreferences = useCallback(async (prefs: { notify_email: boolean; notify_push: boolean }) => {
+    const res = await authApi.updatePreferences(prefs);
+    setUser(res.data);
+    await SecureStore.setItemAsync('user', JSON.stringify(res.data));
+    if (prefs.notify_push) registerForPushNotifications();
+  }, []);
+
   const displayName = user?.full_name?.trim() || user?.username || 'Account';
 
   return (
-    <AuthContext.Provider value={{ token, user, displayName, loading, login, register, logout }}>
+    <AuthContext.Provider value={{ token, user, displayName, loading, login, register, logout, updatePreferences }}>
       {children}
     </AuthContext.Provider>
   );

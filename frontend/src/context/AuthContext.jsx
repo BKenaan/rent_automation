@@ -67,11 +67,18 @@ export const AuthProvider = ({ children }) => {
         setUser(null);
     }, []);
 
+    const updatePreferences = useCallback(async (prefs) => {
+        const res = await authApi.updatePreferences(prefs);
+        setUser(res.data);
+        localStorage.setItem('user', JSON.stringify(res.data));
+        return res.data;
+    }, []);
+
     // Prefer full name, fall back to username, then a neutral default
     const displayName = user?.full_name?.trim() || user?.username || 'Account';
 
     return (
-        <AuthContext.Provider value={{ token, user, displayName, login, logout, register, refreshProfile }}>
+        <AuthContext.Provider value={{ token, user, displayName, login, logout, register, refreshProfile, updatePreferences }}>
             {children}
         </AuthContext.Provider>
     );
